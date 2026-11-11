@@ -302,6 +302,7 @@ main:not([data-tab="F"]) .bscroll, main:not([data-tab="F"]) .jump{display:none}
 .prh b{font-family:'Bebas Neue';font-size:22px;letter-spacing:.03em;line-height:1}
 .prh small{color:var(--mut);font-family:'Barlow Condensed';font-weight:600;font-size:13px}
 .qa{border-top:1px solid var(--line);padding:8px 0}
+.simtag{color:#ffb86b;font-weight:700;letter-spacing:.06em}
 .qa p{margin:0;font-size:14px;line-height:1.55}
 .qa .q{color:var(--mut)}
 .qa .a{color:#e6ecf5;margin-top:4px}
@@ -998,8 +999,27 @@ function myTurn(k){
 }
 
 /* ================= MEDIA: NEWS & PRESS ================= */
-function addNews(item){ const d = cur(); item.id = ++d.n; item.day = d.n; d.news.push(item); }
-function addPress(item){ const d = cur(); item.id = ++d.n; d.press.push(item); }
+/* Real-player mode: any item with simulated quotes gets masked names — "M. J*****" */
+function maskName(n){
+  const parts = String(n).split(' ').filter(x=>!/^(Jr\.?|Sr\.?|II|III|IV)$/i.test(x));
+  if(parts.length<2) return n[0] + '*'.repeat(Math.max(2, n.length-1));
+  const last = parts[parts.length-1];
+  return `${parts.slice(0, -1).join(' ')} ${last.slice(0, -1)}*`;
+}
+function maskItem(item){
+  const names = new Set();
+  (item.teams || [item.team]).filter(Boolean).forEach(id=>{ const s = realSt(id, state.year); if(s) s.pl.forEach(x=>names.add(x.n)); });
+  if(item.team && item.k){ parts(item.k).filter(Boolean).forEach(id=>{ const s = realSt(id, state.year); if(s) s.pl.forEach(x=>names.add(x.n)); }); }
+  const list = [...names].sort((a,b)=>b.length-a.length);
+  const m = s => { s = String(s); for(const n of list){ s = s.split(n).join(maskName(n)); const ln = n.split(' ').filter(x=>!/^(Jr\.?|Sr\.?|II|III|IV)$/i.test(x)).pop(); if(ln && ln.length>3) s = s.replace(new RegExp(`\\b${ln.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`, 'g'), maskName(n).split(' ').pop()); } return s; };
+  if(item.head) item.head = m(item.head);
+  if(item.body) item.body = item.body.map(m);
+  if(item.qa) item.qa = item.qa.map(([q, who, a])=>[m(q), m(who), m(a)]);
+  item.sim = 1;
+  return item;
+}
+function addNews(item){ const d = cur(); if(item.q && !ficFake()) maskItem(item); item.id = ++d.n; item.day = d.n; d.news.push(item); }
+function addPress(item){ const d = cur(); if(!item.desk && !ficFake()) maskItem(item); item.id = ++d.n; d.press.push(item); }
 function purgeMedia(){
   const d = state.data[state.year]; if(!d || !d.news) return;
   const keep = it => {
@@ -1022,7 +1042,8 @@ function rivals(a, b){
   }
   return d.riv[key];
 }
-const persOf = (id, name) => { const r = rosOf(id); const p = r && r.find(x=>x.n===name); return p ? p.per : 'leader'; };
+const hashPer = n => { let x = 0; for(const c of String(n)) x = (x*31 + c.charCodeAt(0)) >>> 0; return PERS[x % PERS.length]; };
+const persOf = (id, name) => { const r = rosOf(id); const p = r && r.find(x=>x.n===name); return p ? p.per : hashPer(name); };
 function trashTalk(name, per, opp, oppName){
   const lines = {
     brash: [`He knows he can't guard me. Everybody in that building knows it.`, `I'm not worried about ${oppName}. He's been talking all week — I let my game answer.`, `They better bring more than that. I'm just getting warmed up.`],
@@ -1037,10 +1058,9 @@ function trashTalk(name, per, opp, oppName){
 function mediaForSeries(k){
   const p = PK()[k]; if(!p || !p.sim) return;
   newsSeries(k);
-  if(ficFake()){
-    pressSeries(k, p.w, true); pressSeries(k, L(k), false);
-    if(Math.random()<0.35) newsRivalry(k, null);
-  } else {
+  pressSeries(k, p.w, true); pressSeries(k, L(k), false);
+  if(Math.random()<0.35) newsRivalry(k, null);
+  if(!ficFake()){
     deskSeries(k);
     if(isSeries(k) && Math.random()<0.45) newsMatchup(k);
   }
@@ -1112,7 +1132,7 @@ function deskQA(k, gi, games){
     `I do. Everyone's talking about ${tw ? tw.n : 'the winners'}, but ${tl.n} is the most dangerous player in this ${g ? 'series' : 'bracket'} when he's rolling.`] : [
     `Not really — but I'll say this: ${tw ? tw.n : 'their star'} has the better supporting cast, and that's the whole story.`,
     `On the numbers, no. But ${tl.n} was facing a defense built entirely around stopping him. Put him in a different spot and he looks a lot better.`])]);
-  const fix = tl2.w[0] ? `fix the ${tl2.w[0].t.replace(/^[^A-Za-z]+/,'').toLowerCase()} problem` : 'find a second scorer';
+  const fix = tl2.w[0] ? `fix the ${wkp(tl2.w[0])} problem` : 'find a second scorer';
   qa.push([g && isSeries(k) ? `What do the ${Tl.n} need to change for the next game?` : `What's next for both teams?`, a2, g && isSeries(k)
     ? `They have to ${fix}. If they don't, ${tw ? tw.n : 'the ' + Tw.n} is going to keep feasting.`
     : `The ${Tw.n} ${nextStep(k) ? nextStep(k).w : 'are champions'}. For the ${Tl.n}, it's a long summer — they have to ${fix}.`]);
@@ -1124,6 +1144,70 @@ function halftime(g){
   const r = 0.45 + Math.random()*0.1;
   return [Math.round(g.hs*r), Math.round(g.as*(0.45 + Math.random()*0.1))];
 }
+/* ---------- long-form news helpers ---------- */
+const WKP = {'Struggling offense':'struggling offense','Leaky defense':'leaky defense','Poor shooting efficiency':'poor shooting','Turnover-prone':'turnover','Loses the boards':'defensive rebounding','No second chances':'offensive rebounding'};
+const wkp = x => WKP[x.t] || x.t.toLowerCase();
+const nm3 = (g, id) => { const s = st(id), p = g.pl[id]; if(!s || !p) return []; return p.map((v,i)=>({n:s.pl[i].n, p:v})).sort((a,b)=>b.p-a.p); };
+const listPts = arr => arr.length===1 ? `${arr[0].n} (${arr[0].p})` : arr.slice(0,-1).map(x=>`${x.n} (${x.p})`).join(', ') + ` and ${arr[arr.length-1].n} (${arr[arr.length-1].p})`;
+function styleLine(id){
+  const a = adv(id), T = TEAMS[id]; if(!a) return '';
+  const r = a.r, n = a.n;
+  return `During the regular season the ${T.n} ranked #${r[0]} of ${n} on offense and #${r[1]} on defense, ${r[2]<=8 ? 'and they love to push the pace' : r[2]>=n-7 ? 'and they prefer to slow things down in the half court' : 'with a middle-of-the-pack tempo'}.`;
+}
+function firstHalfPara(g, w, l){
+  const Tw = TEAMS[w], Tl = TEAMS[l], [hh, ha] = g.ht, hw = w===g.h ? hh : ha, hl = w===g.h ? ha : hh;
+  const fast = (adv(w) && adv(w).r[2]<=8) || (adv(l) && adv(l).r[2]<=8);
+  const lead = hw>=hl ? Tw : Tl, trail = hw>=hl ? Tl : Tw, d = Math.abs(hw-hl);
+  return [
+    pick1([`Both teams came out tight, trading baskets through the opening minutes as each side felt out the other's defense.`, `The opening quarter set the tone early, with ${fast ? 'both teams racing up the floor and looking for quick shots' : 'both teams grinding through long, physical possessions'}.`, `It was a feeling-out process at the start, with neither team able to string together more than a couple of stops in a row.`]),
+    d<=3 ? `Neither side could pull away, and the half ended with the ${lead.n} clinging to a ${Math.max(hw,hl)}-${Math.min(hw,hl)} edge.`
+         : `The ${lead.n} gradually took control in the second quarter and went into the locker room up ${Math.max(hw,hl)}-${Math.min(hw,hl)}.`,
+    d<=3 ? `The ${trail.n} had chances to take the lead before the break but could not convert at the rim.` : `The ${trail.n} struggled to find good looks against the ${lead.n} defense and settled for too many contested jumpers.`,
+    pick1([`The crowd sensed this one was far from over.`, `Both coaching staffs had plenty to talk about at halftime.`, `It was clear the second half would decide everything.`])
+  ].join(' ');
+}
+function secondHalfPara(g, w, l){
+  const Tw = TEAMS[w], Tl = TEAMS[l], [hh, ha] = g.ht, hw = w===g.h ? hh : ha, hl = w===g.h ? ha : hh;
+  const fw = Math.max(g.hs,g.as), fl = Math.min(g.hs,g.as), sw = fw-hw, sl = fl-hl, mg = fw-fl, q = (g.q||12)/12;
+  const out = [];
+  out.push(sw>=sl ? `After the break, the ${Tw.n} outscored the ${Tl.n} ${sw}-${sl}${hw<hl ? ' to complete the comeback' : ''}.` : `The ${Tl.n} won the second half ${sl}-${sw}, but the cushion the ${Tw.n} built early was just enough.`);
+  if(g.ot) out.push(`Regulation was not enough to separate them, and the game went to ${g.ot===2 ? 'double overtime' : 'overtime'}, where the ${Tw.n} made the bigger plays.`);
+  out.push(mg<=Math.max(2,Math.round(4*q)) ? `The final minutes were tense, with every possession feeling like it could swing the result, but the ${Tw.n} got the stops they needed.`
+    : mg>=Math.round(16*q) ? `By the fourth quarter the outcome was no longer in doubt, and both teams emptied their benches in the closing minutes.`
+    : `The ${Tl.n} made one more push late, but the ${Tw.n} answered every run with a timely basket.`);
+  if(g.ev && !/ led /.test(g.ev)) out.push(g.ev);
+  out.push(pick1([`It was a professional, composed finish from the ${Tw.n}.`, `The ${Tw.n} showed the kind of poise that wins in the playoffs.`, `For the ${Tl.n}, it was another reminder of how thin the margins are this time of year.`]));
+  return out.join(' ');
+}
+function boxPara(g, w, l){
+  const Tw = TEAMS[w], Tl = TEAMS[l], pw = nm3(g, w), pl = nm3(g, l);
+  const tw = w===g.h ? g.hs : g.as, tl = l===g.h ? g.hs : g.as;
+  const rw = tw - pw.reduce((s,x)=>s+x.p,0), rl = tl - pl.reduce((s,x)=>s+x.p,0);
+  const out = [];
+  if(pw.length) out.push(`For the ${Tw.n}, ${listPts(pw)} did most of the scoring, and the rest of the roster chipped in ${Math.max(0,rw)} more.`);
+  if(pl.length) out.push(`The ${Tl.n} got ${listPts(pl)}, with ${Math.max(0,rl)} points coming from everyone else.`);
+  if(pw[0] && pl[0]) out.push(pw[0].p>=pl[0].p ? `${pw[0].n} won the battle of the top scorers, and that was a big part of the story.` : `${pl[0].n} actually outscored ${pw[0].n}, but the ${Tw.n} got more from their supporting cast.`);
+  out.push(rw>rl ? `Depth made the difference: the ${Tw.n} role players outscored the ${Tl.n} supporting cast ${Math.max(0,rw)}-${Math.max(0,rl)}.` : `The ${Tl.n} got more from their role players, so the ${Tw.n} won this one on the backs of their stars.`);
+  return out.join(' ');
+}
+function outlookPara(k, gi, games, w, l){
+  const Tw = TEAMS[w], Tl = TEAMS[l], single = !isSeries(k), need = single ? 1 : gameOpts(k)[0];
+  const wins = {}; games.slice(0, gi+1).forEach(x=>{ const ww = x.hs>x.as ? x.h : x.a; wins[ww] = (wins[ww]||0)+1; });
+  const ww = wins[w]||0, lw = wins[l]||0, tl = traits(l), tw = traits(w), nx = nextStep(k);
+  const out = [];
+  if(single || ww>=need){
+    out.push(single ? `The ${Tw.n} survive and advance, while the ${Tl.n}' season ends tonight.` : `With the series over, the ${Tw.n} ${nx ? nx.w : 'are champions'}.`);
+    out.push(`For the ${Tl.n}, the offseason questions start now${tl.w[0] ? `, beginning with a ${wkp(tl.w[0])} problem (${tl.w[0].d}) that showed up at the worst time` : ''}.`);
+    out.push(`The ${Tw.n} will take a day to enjoy it, but ${tw.s[0] ? `their ${tw.s[0].t.replace(/^[^A-Za-z]+/,'').toLowerCase()} (${tw.s[0].d})` : 'their balance'} makes them a tough out for anyone left in the bracket.`);
+  } else {
+    const nextHome = TEAMS[patOf(need)[gi+1]===0 ? homeOf(w,l) : (homeOf(w,l)===w ? l : w)];
+    out.push(ww>lw ? `The ${Tw.n} lead the series ${ww}-${lw} and need ${need-ww} more win${need-ww===1?'':'s'} to advance.` : ww===lw ? `The series is now tied ${ww}-${lw}, and it has become a best-of-${(need-ww)*2-1} from here.` : `The ${Tl.n} still lead ${lw}-${ww}, but the ${Tw.n} have new life.`);
+    out.push(`Game ${gi+2} is in ${nextHome.c}, where the ${nextHome.n} will be looking to protect their home floor.`);
+    out.push(tl.w[0] ? `The ${Tl.n} have to clean up their ${wkp(tl.w[0])} issue (${tl.w[0].d}) if they want to change the momentum.` : `The ${Tl.n} have to find a way to slow down the ${Tw.n} without giving up easy looks.`);
+    out.push(`Expect adjustments from both benches before the next tip.`);
+  }
+  return out.join(' ');
+}
 function newsGame(k, gi, games, m){
   const g = games[gi], w = g.hs>g.as ? g.h : g.a, l = w===g.h ? g.a : g.h, Tw = TEAMS[w], Tl = TEAMS[l];
   const sw = Math.max(g.hs,g.as), sl = Math.min(g.hs,g.as), mg = sw-sl, q = (g.q||12)/12;
@@ -1134,12 +1218,8 @@ function newsGame(k, gi, games, m){
   const head = `${Tw.n} ${verb} ${Tl.n} ${sw}-${sl}${tw ? ` behind ${tw.n}'s ${tw.p}` : ''}`;
   const [hh, ha] = halftime(g), hw = w===g.h ? hh : ha, hl = w===g.h ? ha : hh;
   const series = single ? '' : (ww>=need ? `The win closes out the series ${ww}-${lw}.` : ww>lw ? `The ${Tw.n} now lead the series ${ww}-${lw}.` : ww===lw ? `The series is tied ${ww}-${lw}.` : `The ${Tw.n} cut the series deficit to ${ww}-${lw}.`);
-  const body = [
-    gameRecap(k, gi, games),
-    [g.ev && !/ led /.test(g.ev) ? g.ev : '', strengthPhrase(w) ? `The ${poss(Tw.n)} formula — ${strengthPhrase(w)} — set the tone, and the ${Tl.n} never found a clean answer for it.` : `The ${Tw.n} won the effort plays — loose balls, second chances and the little things that swing playoff games.`,
-      tw && tl ? `The scoring duel between ${tw.n} (${tw.p}) and ${tl.n} (${tl.p}) was the storyline everyone came to see.` : '',
-      mg<=Math.max(2,Math.round(4*q)) ? `A game this close could have gone either way, and both benches will be replaying the final possessions all night.` : `The ${Tl.n} will need a much sharper start next time out.`].filter(Boolean).join(' ')
-  ];
+  gameRecap(k, gi, games);
+  const body = [gameRecap(k, gi, games), firstHalfPara(g, w, l), secondHalfPara(g, w, l), boxPara(g, w, l)];
   if(ficFake()){
     const rv = rivals(w, l);
     if(rv.a && rv.b && (Math.random()<0.4 || mg<=Math.round(4*q))){
@@ -1152,7 +1232,7 @@ function newsGame(k, gi, games, m){
       ]));
     }
   }
-  if(!single && ww<need && lw<need) body.push(`Game ${gi+2} is at ${TEAMS[patOf(need)[gi+1]===0 ? homeOf(w,l) : (homeOf(w,l)===w ? l : w)].c}.`);
+  body.push(outlookPara(k, gi, games, w, l));
   addNews({k, gi, t:'RECAP', head, body, teams:[w,l], my: !!m});
 }
 function newsSeries(k){
@@ -1160,7 +1240,7 @@ function newsSeries(k){
   const w = p.w, l = L(k), Tw = TEAMS[w], Tl = TEAMS[l], games = p.sim.games, single = !isSeries(k);
   const wins = {[w]:0, [l]:0}; games.forEach(g=>wins[g.hs>g.as ? g.h : g.a]++);
   const n = games.length, need = single ? 1 : gameOpts(k)[0], sweep = !single && wins[l]===0, full = !single && n===need*2-1;
-  const head = single ? `${Tw.n} win Play-In showdown with ${Tl.n}` : sweep ? `${Tw.n} sweep ${Tl.n} to advance` : full ? `${Tw.n} survive ${Tl.n} in Game ${n} thriller` : `${Tw.n} eliminate ${Tl.n} in ${n} games`;
+  const head = single ? `${Tw.n} win Play-In showdown with ${Tl.n}` : sweep ? `${Tw.n} sweep ${Tl.n} ${k==='F' ? 'to win the title' : 'to advance'}` : full ? `${Tw.n} survive ${Tl.n} in Game ${n} thriller` : `${Tw.n} eliminate ${Tl.n} in ${n} games`;
   const lw = seriesLeaders(k, w), ll = seriesLeaders(k, l), gl = games[n-1], tc = topOf(gl, w);
   const dw = seedOf(w), dl = seedOf(l), upset = k!=='F' && dw.c===dl.c && dw.s>dl.s;
   const nx = nextStep(k);
@@ -1176,7 +1256,20 @@ function newsSeries(k){
     if(cw) body.push(`"${pick1(['I am proud of the way this group responded to every punch','We talked all series about trusting each other, and that showed tonight','That is a really good team over there. We had to earn every single win'])}," ${Tw.n} coach ${cw} said afterward.`);
     if(cl) body.push(`${Tl.n} coach ${cl} was candid: "${pick1(['They were better than us this series. No excuses','We will learn from this and come back hungrier','It stings. This group gave everything they had'])}."`);
   }
-  addNews({k, t: k==='F' ? 'FINALS' : 'SERIES', head, body: [body.slice(0,3).join(' '), ...body.slice(3)], teams:[w,l]});
+  { const sw0 = st(w), sl0 = st(l);
+    body[0] = `${body[0]} ${sw0 && sl0 ? `The ${Tw.n} came in at ${sw0.r} and the ${Tl.n} at ${sl0.r}, so ${sw0.ovr>=sl0.ovr ? 'the favorite held serve' : 'the underdog delivered'}.` : ''} ${body[1]}`.replace(/\s+/g,' ').trim();
+    body[1] = '';
+    const last = body.length-1;
+    body[last] = `${body[last]} ${nx ? `The ${Tw.n} will have little time to celebrate, because the next opponent will have studied every possession of this series.` : `It caps a run that fans of the ${Tw.n} will be talking about for a long time.`} ${lw[0] ? `If ${lw[0].n} keeps playing like this, ${nx ? 'nobody left in the bracket will want to see them' : 'he will be remembered as the face of this title'}.` : ''} ${nx && nx.l!=='see their season end' ? `The ${Tl.n} head into the summer with plenty to think about.` : ''}`.replace(/\s+/g,' ').trim();
+  }
+  if(!single){
+    const gl2 = games.map((g, i)=>`Game ${i+1}: ${TEAMS[g.hs>g.as ? g.h : g.a].n} ${Math.max(g.hs,g.as)}-${Math.min(g.hs,g.as)}${g.ot ? ' (OT)' : ''}`);
+    const big = games.map((g,i)=>({i, m:Math.abs(g.hs-g.as)})).sort((a,b)=>b.m-a.m)[0], tight = games.map((g,i)=>({i, m:Math.abs(g.hs-g.as)})).sort((a,b)=>a.m-b.m)[0];
+    body.splice(2, 0, `Here is how it unfolded — ${gl2.join('; ')}. ${big.m===tight.m ? `Every game was decided by ${big.m}.` : `The most lopsided result came in Game ${big.i+1}, decided by ${big.m}, while Game ${tight.i+1} was the closest at just ${tight.m}.`} ${games[0] && (games[0].hs>games[0].as ? games[0].h : games[0].a)===w ? `The ${Tw.n} set the tone by winning Game 1 and never gave up control.` : `The ${Tl.n} actually stole Game 1, which forced the ${Tw.n} to respond.`} Every game added a new layer to the story.`);
+    const sup = (id, ls) => ls.slice(1).filter(Boolean).map(x=>`${x.n} (${x.a.toFixed(1)})`).join(' and ');
+    if(lw[1] || ll[1]) body.splice(4, 0, `The supporting casts mattered too. ${lw[1] ? `Behind ${lw[0].n}, the ${Tw.n} got steady scoring from ${sup(w, lw)}.` : ''} ${ll[1] ? `The ${Tl.n} leaned on ${sup(l, ll)} to keep pace.` : ''} ${styleLine(w)} ${styleLine(l)}`.replace(/\s+/g,' ').trim());
+  }
+  addNews({k, t: k==='F' ? 'FINALS' : 'SERIES', head, body: body.filter(Boolean), teams:[w,l]});
 }
 function newsPreview(k){
   const [a, b] = parts(k), sa = st(a), sb = st(b), A = TEAMS[a], B = TEAMS[b];
@@ -1189,9 +1282,13 @@ function newsPreview(k){
     sa && sb ? `The key battle: ${sa.pl[0].n} (${sa.pl[0].p} PPG) against ${sb.pl[0].n} (${sb.pl[0].p} PPG). Whoever wins that matchup probably wins the series.` : '',
     single ? `Prediction: ${TEAMS[fav].n} in a tight one.` : `Prediction: ${TEAMS[fav].n} in ${Math.random()<0.5 ? need+1 : need*2-1}.`
   ].filter(Boolean);
-  if(sa && sb) body.splice(1, 0, `The ${A.n} carry an overall rating of ${sa.ovr} into the series, while the ${B.n} sit at ${sb.ovr}.`);
-  addNews({k, t:'PREVIEW', head, body: [body.join(' ')], teams:[a,b]});
-  if(ficFake()) newsRivalry(k, true);
+  const P = [];
+  P.push(`${body[0]} ${sa && sb ? `The ${A.n} carry an overall rating of ${sa.ovr} into the matchup, while the ${B.n} sit at ${sb.ovr}. ${Math.abs(sa.ovr-sb.ovr)<=3 ? 'This one looks like a coin flip on paper.' : `That gap is real, but the playoffs have a way of shrinking it.`}` : ''}`);
+  P.push(`${styleLine(a)} ${strengthPhrase(a) ? `They lean on ${strengthPhrase(a)}.` : ''} ${styleLine(b)} ${strengthPhrase(b) ? `The ${B.n} counter with ${strengthPhrase(b)}.` : ''} How each side imposes its style will decide a lot.`.replace(/\s+/g,' ').trim());
+  if(sa && sb) P.push(`The headline matchup is ${sa.pl[0].n} (${sa.pl[0].p} PPG) against ${sb.pl[0].n} (${sb.pl[0].p} PPG). Behind them, the ${A.n} have ${sa.pl[1].n} (${sa.pl[1].p}) and ${sa.pl[2].n} (${sa.pl[2].p}), while the ${B.n} bring ${sb.pl[1].n} (${sb.pl[1].p}) and ${sb.pl[2].n} (${sb.pl[2].p}). Whichever star wins his matchup probably wins the ${single ? 'game' : 'series'}. The supporting players will decide the close ones.`);
+  P.push(`${traits(dog).s[0] ? `The ${TEAMS[dog].n}' best path to an upset is their ${traits(dog).s[0].t.replace(/^[^A-Za-z]+/,'').toLowerCase()} (${traits(dog).s[0].d}).` : `The ${TEAMS[dog].n} need a near-perfect performance to pull the upset.`} ${traits(fav).w[0] ? `They will try to exploit the ${TEAMS[fav].n}' ${wkp(traits(fav).w[0])} weakness (${traits(fav).w[0].d}).` : `The ${TEAMS[fav].n} do not have an obvious weakness to attack.`} ${body[body.length-1]}`);
+  addNews({k, t:'PREVIEW', head, body: P, teams:[a,b]});
+  newsRivalry(k, true);
 }
 function newsRivalry(k, pre){
   const [a, b] = PK()[k] ? [PK()[k].w, L(k)] : parts(k);
@@ -1200,19 +1297,21 @@ function newsRivalry(k, pre){
   const pa = rv.a, pb = rv.b, ta = rv.ta, tb = rv.tb;
   const qa = trashTalk(pa, persOf(ta, pa), TEAMS[tb].n, pb), qb = trashTalk(pb, persOf(tb, pb), TEAMS[ta].n, pa);
   const head = pick1([`War of words: ${pb} fires back at ${pa}`, `${pa} vs. ${pb}: the rivalry nobody can stop talking about`, `"${qa.split('.')[0]}" — ${pa} turns up the heat on ${pb}`]);
+  const SA = st(ta), SB = st(tb), ppg = (S, n) => { const x = S && S.pl.find(y=>y.n===n); return x ? x.p : null; };
+  const la = !pre && PK()[k] ? seriesLeaders(k, ta).find(x=>x.n===pa) : null, lb = !pre && PK()[k] ? seriesLeaders(k, tb).find(x=>x.n===pb) : null;
   const body = [
-    pre ? `Before the ${roundName(k)} series even tipped off, the ${TEAMS[ta].n}' ${pa} and the ${TEAMS[tb].n}' ${pb} were already trading shots in the media.` :
-          `The ${roundName(k)} series between the ${TEAMS[ta].n} and the ${TEAMS[tb].n} produced plenty of fireworks, and much of it centered on ${pa} and ${pb}.`,
-    `"${qa}" ${pa} said at shootaround, drawing laughs from a few teammates and a pointed silence from the other locker room.`,
-    `${pb} did not let it slide. "${qb}" he told reporters later in the day.`,
-    pick1([`League sources say officials have been told to keep a close eye on the matchup.`, `Former players on national broadcasts have already picked sides, and social media is doing the rest.`, `Both coaches tried to downplay the back-and-forth, but nobody in either locker room is pretending it isn't personal.`])
+    `${pre ? `Before the ${roundName(k)} series even tipped off, ${pa} of the ${TEAMS[ta].n} and ${pb} of the ${TEAMS[tb].n} were already trading shots in the media.` : `The ${roundName(k)} series between the ${TEAMS[ta].n} and the ${TEAMS[tb].n} produced plenty of fireworks, and much of it centered on ${pa} and ${pb}.`} ${ppg(SA, pa)!=null && ppg(SB, pb)!=null ? `${pa} averaged ${ppg(SA, pa)} points a game during the regular season, while ${pb} put up ${ppg(SB, pb)}.` : ''} ${la && lb ? `In this series, ${pa} has averaged ${la.a.toFixed(1)} to ${lb.a.toFixed(1)} for ${pb}.` : `Both players are the focal point of their team's offense, and both know it.`} It did not take long for the matchup on the floor to turn into a matchup at the microphone.`,
+    `"${qa}" ${pa} said at shootaround, drawing laughs from a few teammates and a pointed silence from the other locker room. Those within earshot said he did not crack a smile. ${pick1([`It was the kind of line that gets printed on a T-shirt by the next morning.`, `Within minutes, the quote was the talk of the league.`, `The ${TEAMS[tb].n} locker room was not amused.`])}`,
+    `${pb} did not let it slide. "${qb}" he told reporters later in the day. ${pick1([`He then walked off without taking another question.`, `Teammates nodded along behind him.`, `He paused, smiled, and added that he would "see him on the court."`])} ${pick1([`The exchange only added fuel to a matchup that was already must-watch.`, `Neither player seems interested in backing down.`])}`,
+    `${pick1([`League sources say officials have been told to keep a close eye on the matchup.`, `Former players on national broadcasts have already picked sides, and social media is doing the rest.`, `Both coaches tried to downplay the back-and-forth, but nobody in either locker room is pretending it isn't personal.`])} ${pre ? `The first meeting will tell us a lot about who backs it up.` : `Whatever happens next, this one is not going away quietly.`} ${pick1([`Grab your popcorn.`, `Circle the next game on your calendar.`, `Stay tuned.`])}`
   ];
   rv.heat++;
-  addNews({k, t:'RIVALRY', head, body, teams:[ta,tb]});
+  addNews({k, t:'RIVALRY', head, body, teams:[ta,tb], q:1});
 }
 function pressQA(k, id, won, gi, games){
   const opp = parts(k)[0]===id ? parts(k)[1] : parts(k)[0], T = TEAMS[id], O = TEAMS[opp];
-  const coach = coachOf(id), ros = rosOf(id); if(!coach || !ros) return null;
+  const s0 = st(id); if(!s0) return null;
+  const coach = coachOf(id) || 'Head coach', ros = rosOf(id) || s0.pl.map(x=>({n:x.n, per:hashPer(x.n)}));
   const g = gi!=null ? games[gi] : null, single = !isSeries(k);
   const top = g ? topOf(g, id) : (seriesLeaders(k, id)[0] ? {n:seriesLeaders(k, id)[0].n, p:seriesLeaders(k, id)[0].a.toFixed(1)} : null);
   const star = ros.find(x=>top && x.n===top.n) || ros[0];
@@ -1225,6 +1324,7 @@ function pressQA(k, id, won, gi, games){
     : pick1([`We didn't defend with the urgency this time of year requires. That's on me to fix.`, `Credit ${O.n}. They made the plays down the stretch and we didn't.`, `Too many turnovers, too many easy looks. We'll watch the film and be better.`])]);
   if(top) qa.push([g ? `${top.n}, you finished with ${top.p} points. What were you seeing out there?` : `${top.n}, you averaged ${top.p} points in the series. What were you seeing?`, star.n, star.per==='quiet'
     ? pick1([`Just taking what the defense gave me. My teammates found me in good spots.`, `I don't really think about numbers. Just trying to make the right play.`])
+    : !won ? pick1([`Doesn't matter what I scored. We lost. That's the only number I care about.`, `I've got to be better, simple as that. My team needed more from me.`, `Give them credit. We'll see what happens next time.`])
     : star.per==='brash' || star.per==='showman'
       ? pick1([`Honestly? They couldn't stay in front of me. I was going to keep attacking all night.`, `This is the stage I want to be on. I felt it from warmups.`])
       : pick1([`We executed. The coaches put me in good positions and I trusted the work.`, `It's about winning. Whatever the team needs from me, that's what I'm bringing.`])]);
@@ -1465,15 +1565,14 @@ function newsPanel(){
   if(f==='riv') items = items.filter(x => x.t==='RIVALRY' || (x.body||[]).some(p=>/technical|words|stare|tangled|jawing/i.test(p)));
   const filt = `<div class="nfil">${[['all','All'],['my','My Team'],['riv','Rivalries']].map(([v,l])=>`<button class="chipb ${f===v?'on':''}" data-nf="${v}">${l}</button>`).join('')}</div>`;
   const card = x => `<article class="art">
-      <div class="atag"><span style="background:${TAGC[x.t]||'#999'}">${x.t}</span><small>${esc(roundName(x.k))} · Day ${x.day}</small></div>
+      <div class="atag"><span style="background:${TAGC[x.t]||'#999'}">${x.t}</span><small>${esc(roundName(x.k))} · Day ${x.day}${x.sim ? ' · <span class="simtag">SIMULATED QUOTES</span>' : ''}</small></div>
       <h3>${esc(x.head)}</h3>
       <div class="ateams">${(x.teams||[]).map(id=>badge(id)).join('')}</div>
-      <p>${esc(x.body[0])}</p>
-      ${x.body.length>1 ? `<details><summary>Read full story</summary>${x.body.slice(1).map(p=>`<p>${esc(p)}</p>`).join('')}</details>` : ''}
+      ${x.body.map(p=>`<p>${esc(p)}</p>`).join('')}
     </article>`;
   return `<section class="panel N">
     <div class="ph"><h2>📰 News</h2><span class="pc">${d.news.length} stories</span></div>
-    ${ficFake() ? '' : `<p class="note">Recaps, previews, series stories and star-vs-star matchup stories appear as the bracket plays out. Player quotes and trash talk are only written for made-up players (🎲 Fictional League → <b>Fictional names</b>).</p>`}
+    ${ficFake() ? '' : `<p class="note">Recaps, previews, series and matchup stories appear as the bracket plays out. Stories with quotes or trash talk are <b>simulated</b> — real players' names are masked (e.g. Michael Jorda*) and nothing they "say" here is real.</p>`}
     ${filt}
     ${items.length ? items.map(card).join('') : `<p class="note">No stories yet. Simulate a round or play your team's games to fill the news feed.</p>`}
   </section>`;
@@ -1482,12 +1581,12 @@ function pressPanel(){
   const d = cur();
   const items = d.press.slice().reverse(), real = !ficFake();
   return `<section class="panel P">
-    <div class="ph"><h2>🎤 ${real ? 'Postgame Show' : 'Press Room'}</h2><span class="pc">${items.length} ${real ? 'shows' : 'pressers'}</span></div>
-    ${real ? `<p class="note">After every game your team plays and after every series, a panel of <b>made-up analysts</b> breaks down the real players and argues about the matchups. Real players are never quoted — for full player press conferences and trash talk, use 🎲 Fictional League → <b>Fictional names</b>.</p>` : ''}
+    <div class="ph"><h2>🎤 Press Room</h2><span class="pc">${items.length} pressers</span></div>
+    ${real ? `<p class="note">Press conferences after every game your team plays and after every series, plus a postgame analyst show. All quotes are <b>simulated</b> — real players' names are masked (e.g. Michael Jorda*) and none of this was actually said.</p>` : ''}
     ${items.length ? items.map(x=>{
       const T = TEAMS[x.team];
       return `<article class="prs" style="--tc:${T.p}">
-        <div class="prh">${badge(x.team)}<div><b>${esc(T.c+' '+T.n)}</b><small>${esc(x.title)} · ${esc(roundName(x.k))}${x.score ? ` · Final ${esc(x.score)}` : ''}</small></div>${x.desk ? '' : `<span class="wl ${x.won?'w':'l'}">${x.won?'W':'L'}</span>`}</div>
+        <div class="prh">${badge(x.team)}<div><b>${esc(T.c+' '+T.n)}</b><small>${esc(x.title)} · ${esc(roundName(x.k))}${x.score ? ` · Final ${esc(x.score)}` : ''}${x.sim ? ' · <span class="simtag">SIMULATED</span>' : ''}</small></div>${x.desk ? '' : `<span class="wl ${x.won?'w':'l'}">${x.won?'W':'L'}</span>`}</div>
         ${x.qa.map(([q, who, a])=>`<div class="qa"><p class="q"><b>${x.desk ? esc(x.host)+' (host)' : 'Reporter'}:</b> ${esc(q)}</p><p class="a"><b>${esc(who)}${x.desk ? ' (analyst)' : ''}:</b> “${esc(a)}”</p></div>`).join('')}
       </article>`;
     }).join('') : `<p class="note">No press conferences yet. They appear after every game your team plays and after every series ends.</p>`}
@@ -1881,7 +1980,7 @@ function myModal(k){
     const last = wins[m]>=need || wins[opp]>=need;
     g.ev = gameEvent(g, games.length, need, last, single);
     newsGame(k, games.length-1, games, true);
-    if(ficFake()) pressGame(k, games.length-1, games); else deskGame(k, games.length-1, games);
+    pressGame(k, games.length-1, games); if(!ficFake()) deskGame(k, games.length-1, games);
     if(last){
       const w = wins[m]>=need ? m : opp, l = w===m ? opp : m;
       PK()[k] = {w, g: single ? null : games.length, sim:{w, l, games: games.slice()}};

@@ -543,21 +543,6 @@ body.book-open .booktab,body.book-open .boardtab,body.book-open .nbbtn,body.book
 
 <script>
 /* =====================================================================
-   🔥 FIREBASE CONFIG — paste yours here for online multiplayer
-   ---------------------------------------------------------------------
-   Firebase console → ⚙️ Project settings → Your apps → Web app → firebaseConfig.
-   Copy the values between the { } and paste them below. Keep the commas.
-   Leave it empty if you'd rather paste it inside the game instead.
-   ===================================================================== */
-const FIREBASE_CONFIG = {
-  // apiKey: "AIza...",
-  // authDomain: "your-project.firebaseapp.com",
-  // databaseURL: "https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app",
-  // projectId: "your-project",
-  // appId: "1:123:web:abc"
-};
-
-/* =====================================================================
    CASE ENGINE v6 — seeded: the same code builds the same case everywhere
    ===================================================================== */
 function hashStr(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}
@@ -1593,8 +1578,8 @@ function home(){
     ${board.length?`<ol class="board">${board.map(([n,b],i)=>`<li><span>${i===0?'👑 ':''}${esc(n)}</span><span>${b.pts} pts · ${b.solved}/${b.played} solved</span></li>`).join('')}</ol>`:'<div class="empty">No scores yet.</div>'}</div>
   </div>
   <div class="panel how" style="margin-top:14px"><h3>How to play with your crew</h3><ol>
-   <li><b>The host</b> opens a case and taps <b>Create room</b>. (First time only: connect your free Firebase — the game walks you through it.)</li>
-   <li>Send your crew the <b>invite link</b>. They tap it, type their name, and they're in. (Typing the room code works too once their phone has joined before.)</li>
+   <li><b>The host</b> opens a case and taps <b>Create room</b>. No setup, no accounts — it just connects.</li>
+   <li>Send your crew the <b>invite link</b>. They tap it, type their name, and they're in. (Or they open the game and type the room code.)</li>
    <li>When everyone's in the lobby, the host hits <b>Start</b>. Everyone plays on their own phone.</li>
    <li>Read the statements, tap a <b>suspect's photo</b> for their profile, save stuff to <b>Notes</b>, look things up in <b>Search</b>.</li>
    <li>Before each new stage, <b>every player votes</b> on their own phone. Votes stay secret until everyone's in.</li>
@@ -1897,7 +1882,7 @@ function revealView(){
 function resetCase(){confirmBox('Replay this case?','Clears names, votes, notes, visits and accusations for this case on this device.','Reset',()=>{PG=defPG();TAB='file';savePG();setupView()})}
 function share(){
   const base=location.protocol.startsWith('http')?location.origin+location.pathname:'';
-  const frag=online()?'#room='+ROOMCODE+(hasBuiltIn()||!getFbConfig()?'':'&fb='+cfgToParam(getFbConfig())):'#case='+CODE;
+  const frag=online()?'#room='+ROOMCODE:'#case='+CODE;
   const url=base?base+frag:'';
   const label=online()?'Room code: '+ROOMCODE:'Case code: '+CODE;
   const text='Join my case in The Last Night! '+label+(url?'\n'+url:'');
@@ -2637,86 +2622,132 @@ function continueList(){
 }
 
 /* =====================================================================
-   ONLINE ROOMS — Firebase Realtime Database
+   ONLINE ROOMS — no setup, no accounts, no Firebase.
+   The game talks through free public relays, several at once
+   (MQTT brokers + ntfy.sh). If one is blocked on someone's network,
+   the others still carry the messages. Nothing to configure.
    ===================================================================== */
-const FB_SDK='https://www.gstatic.com/firebasejs/10.12.2/';
+const RELAYS=Object.assign({
+  mqtt:['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'],
+  ntfy:['https://ntfy.sh']
+},window.TLN_RELAYS||{});
+const NS='thelastnight-v9';
 const RA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const NET={db:null,ref:null,room:null,status:'off',connRef:null};
+const NET={room:null,status:'off',links:[],seen:{},clock:0,hbT:null,hb:{},me:'tln'+Math.random().toString(36).slice(2,10)};
 let PENDING_NAME='';
 function emptyRoom(){return{meta:null,players:{},roster:null,votes:{},att:{},round:1,acc:{},reveal:null}}
 function rid(){return Math.random().toString(36).slice(2,10)}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg||'timeout')),ms))])}
 function genRoom(){let s='';for(let i=0;i<5;i++)s+=RA[Math.floor(Math.random()*RA.length)];return s}
+const TE=new TextEncoder(),TD=new TextDecoder();
 
-/* --- config: built-in (FIREBASE_CONFIG), or pasted in the app, or carried in an invite link --- */
-function hasBuiltIn(){return FIREBASE_CONFIG&&FIREBASE_CONFIG.apiKey&&FIREBASE_CONFIG.databaseURL}
-function getFbConfig(){if(hasBuiltIn())return FIREBASE_CONFIG;const c=lsGet('tln:fb',null);return c&&c.apiKey&&c.databaseURL?c:null}
-function parseFbConfig(txt){
-  txt=(txt||'').trim();let o=null;
-  try{o=JSON.parse(txt)}catch(e){}
-  if(!o||typeof o!=='object'){o={};const re=/["']?(\w+)["']?\s*:\s*["'`]([^"'`]+)["'`]/g;let m;while((m=re.exec(txt)))o[m[1]]=m[2]}
-  return o;
+/* --- tiny MQTT 3.1.1 client over WebSocket (built in, no library to download) --- */
+function mqttLink(url,room){
+  const base=NS+'/'+room+'/';
+  const L={kind:'mqtt',url,live:false,closed:false,ws:null,buf:new Uint8Array(0),tries:0,ping:null,to:null,q:new Map()};
+  const s2=s=>{const b=TE.encode(s);return[b.length>>8,b.length&255,...b]};
+  const vl=n=>{const o=[];do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;o.push(d)}while(n>0);return o};
+  const pkt=(h,body)=>new Uint8Array([h,...vl(body.length),...body]);
+  const raw=b=>{try{L.ws.send(b)}catch(e){}};
+  const pubPkt=(k,p)=>pkt(0x31,[...s2(base+k),...TE.encode(p)]);
+  function drop(){L.live=false;clearInterval(L.ping);clearTimeout(L.to);netState();
+    if(!L.closed){const wait=Math.min(15000,1000*Math.pow(2,L.tries++));setTimeout(()=>{if(!L.closed)open()},wait)}}
+  function open(){
+    let ws;try{ws=new WebSocket(url,'mqtt')}catch(e){drop();return}
+    L.ws=ws;ws.binaryType='arraybuffer';L.buf=new Uint8Array(0);
+    L.to=setTimeout(()=>{if(!L.live){try{ws.close()}catch(e){}}},9000);
+    ws.onopen=()=>raw(pkt(0x10,[...s2('MQTT'),4,0x02,0,60,...s2(NET.me+rid().slice(0,6))]));
+    ws.onmessage=ev=>{const a=new Uint8Array(ev.data),b=new Uint8Array(L.buf.length+a.length);b.set(L.buf);b.set(a,L.buf.length);L.buf=b;parse()};
+    ws.onclose=()=>{if(L.ws===ws)drop()};
+    ws.onerror=()=>{try{ws.close()}catch(e){}};
+  }
+  function parse(){
+    for(;;){const b=L.buf;if(b.length<2)return;
+      let n=0,m=1,i=1,d;do{if(i>=b.length)return;d=b[i++];n+=(d&127)*m;m*=128}while(d&128);
+      if(b.length<i+n)return;const body=b.subarray(i,i+n),type=b[0]>>4,qos=(b[0]>>1)&3;L.buf=b.slice(i+n);
+      if(type===2){if(body[1]!==0){try{L.ws.close()}catch(e){}return}
+        L.live=true;L.tries=0;clearTimeout(L.to);raw(pkt(0x82,[0,1,...s2(base+'#'),0]));
+        L.ping=setInterval(()=>raw(pkt(0xC0,[])),25000);L.q.forEach((p,k)=>raw(pubPkt(k,p)));L.q.clear();netState()}
+      else if(type===3){const tl=(body[0]<<8)|body[1];const topic=TD.decode(body.subarray(2,2+tl));let o=2+tl;
+        if(qos>0){raw(pkt(0x40,[body[o],body[o+1]]));o+=2}
+        if(topic.startsWith(base))onRelay(topic.slice(base.length),TD.decode(body.subarray(o)))}
+    }
+  }
+  L.send=(k,p)=>{if(L.live)raw(pubPkt(k,p));else L.q.set(k,p)};
+  L.close=()=>{L.closed=true;L.live=false;clearInterval(L.ping);clearTimeout(L.to);if(L.ws){try{L.ws.close()}catch(e){}}};
+  open();return L;
 }
-function cfgToParam(c){return btoa(unescape(encodeURIComponent(JSON.stringify({apiKey:c.apiKey,authDomain:c.authDomain,databaseURL:c.databaseURL,projectId:c.projectId,appId:c.appId})))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-function paramToCfg(p){try{p=p.replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';return JSON.parse(decodeURIComponent(escape(atob(p))))}catch(e){return null}}
+/* --- ntfy.sh: plain HTTPS (port 443), works where other ports are blocked --- */
+function ntfyLink(host,room){
+  const topic=NS+'-'+room;
+  const L={kind:'ntfy',url:host,live:false,closed:false,es:null,last:'all',tries:0};
+  function open(){
+    let es;try{es=new EventSource(host+'/'+topic+'/sse?since='+L.last)}catch(e){return}
+    L.es=es;
+    es.onopen=()=>{L.live=true;L.tries=0;netState()};
+    es.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(e){return}
+      if(m.event!=='message'||typeof m.message!=='string')return;L.last=m.id||L.last;
+      const i=m.message.indexOf('\n');if(i>0)onRelay(m.message.slice(0,i),m.message.slice(i+1))};
+    es.onerror=()=>{es.close();L.live=false;netState();if(!L.closed)setTimeout(()=>{if(!L.closed)open()},Math.min(15000,1500*Math.pow(2,L.tries++)))};
+  }
+  L.send=(k,p)=>{fetch(host+'/'+topic,{method:'POST',body:k+'\n'+p}).catch(()=>{})};
+  L.close=()=>{L.closed=true;L.live=false;if(L.es)L.es.close()};
+  open();return L;
+}
 
-function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Couldn\'t load Firebase. Check your internet.'));document.head.appendChild(s)})}
-async function loadFirebase(){
-  if(window.firebase&&window.firebase.database)return;
-  if(!window.firebase)await loadScript(FB_SDK+'firebase-app-compat.js');
-  if(!window.firebase.database)await loadScript(FB_SDK+'firebase-database-compat.js');
+/* --- room state: every key keeps only its newest value (stamp + sender breaks ties) --- */
+function newer(a,b){return !b||a.t>b.t||(a.t===b.t&&a.s>b.s)}
+function onRelay(k,payload){
+  if(!ROOM)return;let m;try{m=JSON.parse(payload)}catch(e){return}
+  if(!m||typeof m.t!=='number')return;
+  if(k.startsWith('hb/')){if(m.d&&Math.abs(Date.now()-m.d.at)<300000)NET.hb[k.slice(3)]=Date.now();scheduleRoomRender();return}
+  if(!newer(m,NET.seen[k]))return;
+  NET.seen[k]=m;NET.clock=Math.max(NET.clock,m.t);applyKey(k,m.d);scheduleRoomRender();
 }
-async function fbConnect(){
-  const cfg=getFbConfig();if(!cfg)throw new Error('NOCONFIG');
-  await withTimeout(loadFirebase(),15000,'Couldn\'t load Firebase. Check your internet.');
-  const name='tln-'+hashStr(cfg.databaseURL);
-  const app=firebase.apps.find(a=>a.name===name)||firebase.initializeApp(cfg,name);
-  NET.db=app.database();
-  if(!NET.connRef){
-    NET.connRef=NET.db.ref('.info/connected');
-    NET.connRef.on('value',s=>{const was=NET.status;NET.status=s.val()?'live':(was==='off'?'off':'wait');netStatus(was);if(s.val())markOnline()});
+function applyKey(k,d){
+  const R=ROOM,parts=k.split('/');
+  switch(parts[0]){
+    case 'meta':R.meta=d;break;
+    case 'p':if(d)R.players[parts[1]]=d;else delete R.players[parts[1]];break;
+    case 'roster':R.roster=d;break;
+    case 'v':{const st=parts[1],att=parts[2],pid=parts[3];R.votes[st]=R.votes[st]||{};R.votes[st][att]=R.votes[st][att]||{};if(d)R.votes[st][att][pid]=d;else delete R.votes[st][att][pid];break}
+    case 'att':R.att[parts[1]]=d?d.n:0;break;
+    case 'round':R.round=Math.max(R.round||1,d?d.r:1);break;
+    case 'a':if(d)R.acc[parts[1]]=d;else delete R.acc[parts[1]];break;
+    case 'reveal':R.reveal=d;break;
   }
 }
-function fbError(e){
-  const m=String(e&&(e.code||e.message)||e);
-  if(/PERMISSION|permission/.test(m))return 'Firebase blocked the request. Open your Realtime Database → Rules, paste the rules from the setup steps, and hit Publish.';
-  if(/NOCONFIG/.test(m))return 'Firebase isn\'t set up yet.';
-  if(/timeout/.test(m))return 'Firebase took too long to answer. Check your internet, and double-check the databaseURL in your config.';
-  return m;
+/* write: apply here right away, then send through every relay */
+function pub(k,d){
+  if(!NET.room){toast('Not connected');return}
+  const m={t:Math.max(Date.now(),NET.clock+1),s:NET.me,d:d===undefined?null:d};NET.clock=m.t;
+  const p=JSON.stringify(m);onRelay(k,p);NET.links.forEach(L=>L.send(k,p));
 }
-function netAttach(room){
-  if(NET.ref)NET.ref.off();
-  NET.room=room;NET.ref=NET.db.ref('rooms/'+room);ROOM=null;
-  NET.ref.on('value',s=>{ROOM=parseRoom(s.val());scheduleRoomRender()},e=>{msgScreen('⛔','Lost access to the room',esc(fbError(e)),'<button class="btn red" onclick="goHome()">Home</button>')});
+function heartbeat(){
+  if(!NET.room||!PG||!PG.pid)return;const p=JSON.stringify({t:Date.now(),s:NET.me,d:{at:Date.now()}});
+  NET.hb[PG.pid]=Date.now();
+  const mq=NET.links.filter(L=>L.kind==='mqtt'&&L.live);
+  if(mq.length)mq.forEach(L=>L.send('hb/'+PG.pid,p));
+  else if(!NET.lastNtfyHb||Date.now()-NET.lastNtfyHb>85000){NET.lastNtfyHb=Date.now();NET.links.filter(L=>L.kind==='ntfy').forEach(L=>L.send('hb/'+PG.pid,p))}
 }
-function netLeave(){if(NET.ref){try{NET.ref.off()}catch(e){}}NET.ref=null;NET.room=null;ROOM=null}
-function netStatus(was){const d=document.querySelector('.codechip .dot');if(d)d.className='dot '+NET.status;if(NET.status!=='live'&&was==='live'&&NET.room)toast('Connection lost — reconnecting…')}
-function markOnline(){
-  if(!NET.ref||!PG||!PG.pid||!ROOM||!ROOM.players[PG.pid])return;
-  const r=NET.ref.child('p/'+PG.pid+'/online');r.set(true);r.onDisconnect().set(false);
+function markOnline(){if(ROOM&&PG&&PG.pid&&ROOM.players[PG.pid])heartbeat()}
+function netJoin(room){
+  netLeave();NET.room=room;NET.seen={};NET.hb={};ROOM=emptyRoom();NET.status='wait';
+  NET.links=RELAYS.mqtt.map(u=>mqttLink(u,room)).concat(RELAYS.ntfy.map(h=>ntfyLink(h,room)));
+  NET.hbT=setInterval(markOnline,20000);
 }
-function parseRoom(d){
-  d=d||{};const R=emptyRoom();
-  R.meta=d.meta||null;R.players=d.p||{};
-  if(d.roster){R.roster={pids:Array.isArray(d.roster.pids)?d.roster.pids.filter(Boolean):Object.values(d.roster.pids||{}),names:d.roster.names||{}}}
-  Object.entries(d.v||{}).forEach(([st,atts])=>{const s=st.replace('st','');R.votes[s]={};Object.entries(atts||{}).forEach(([a,vs])=>{R.votes[s][a.replace('n','')]=vs||{}})});
-  Object.entries(d.att||{}).forEach(([st,n])=>{R.att[st.replace('st','')]=n});
-  R.round=typeof d.round==='number'?d.round:1;R.acc=d.a||{};R.reveal=d.reveal||null;
-  return R;
+function netLeave(){NET.links.forEach(L=>L.close());NET.links=[];clearInterval(NET.hbT);NET.room=null;NET.status='off';ROOM=null}
+function netState(){
+  const was=NET.status;NET.status=NET.links.some(L=>L.live)?'live':NET.room?'wait':'off';
+  const d=document.querySelector('.codechip .dot');if(d)d.className='dot '+NET.status;
+  if(was==='live'&&NET.status!=='live'&&NET.room)toast('Connection lost — reconnecting…');
+  if(was!=='live'&&NET.status==='live')markOnline();
 }
-/* write helper — keeps the same "topics" the game logic uses */
-function pub(sub,obj){
-  if(!NET.ref){toast('Not connected');return}
-  const p=sub.split('/');let path=sub,val=obj;
-  if(p[0]==='round')val=obj.r;
-  else if(p[0]==='att'){path='att/st'+p[1];val=obj.n}
-  else if(p[0]==='v')path='v/st'+p[1]+'/n'+p[2]+'/'+p[3];
-  NET.ref.child(path).set(val===undefined?null:val).catch(e=>toast(fbError(e)));
-}
+async function waitLive(ms){const t0=Date.now();while(NET.room&&NET.status!=='live'&&Date.now()-t0<ms)await sleep(100);return NET.status==='live'}
+
 let rrT=null,pendingRR=false;
 function typing(){const ae=document.activeElement;return ae&&app.contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)}
-function scheduleRoomRender(){clearTimeout(rrT);rrT=setTimeout(()=>{if(!ROOM)return;if(typing()){pendingRR=true;return}roomRender()},100)}
+function scheduleRoomRender(){clearTimeout(rrT);rrT=setTimeout(()=>{if(!ROOM||!ROOM.meta||PGKEY!=='tln3room:'+NET.room)return;if(typing()){pendingRR=true;return}roomRender()},120)}
 document.addEventListener('focusout',()=>{if(pendingRR)setTimeout(()=>{if(pendingRR&&!typing()&&ROOM){pendingRR=false;roomRender()}},60)});
 
 function syncFromRoom(){
@@ -2727,61 +2758,27 @@ function syncFromRoom(){
   PG.votes={};
   [2,3].forEach(st=>{const vs=(R.votes[st]&&R.votes[st][R.att[st]||0])||{};PG.votes[st]={};PG.players.forEach((p,i)=>{if(vs[p.pid])PG.votes[st][i]=vs[p.pid]})});
 }
-function onlineDot(pid){const p=ROOM&&ROOM.players[pid];return p&&p.online?'<span class="pdot on" title="Online"></span>':'<span class="pdot" title="Offline"></span>'}
+function isOn(pid){const t=NET.hb[pid];return pid===(PG&&PG.pid)?NET.status==='live':!!t&&Date.now()-t<(NET.links.some(L=>L.kind==='mqtt'&&L.live)?70000:200000)}
+function onlineDot(pid){return isOn(pid)?'<span class="pdot on" title="Online"></span>':'<span class="pdot" title="Offline"></span>'}
 function msgScreen(icon,title,text,btns){nbVisible(false);
   app.innerHTML=`<div class="wrap fadein"><div class="paper locked" style="margin-top:40px"><div class="ic">${icon}</div><h2>${title}</h2><p class="type">${text}</p>${btns||''}</div></div>`;
 }
-
-/* --- setup screen (only shown if FIREBASE_CONFIG in the file is empty) --- */
-const FB_RULES='{\n  "rules": {\n    "rooms": {\n      "$room": { ".read": true, ".write": true }\n    }\n  }\n}';
-function fbSetupScreen(after){
-  FB_AFTER=after;
-  app.innerHTML=`<div class="wrap fadein"><div class="topbar"><button class="link" onclick="goHome()">← Home</button></div>
-   <div class="paper"><div class="cf">ONE-TIME SETUP · ABOUT 5 MINUTES</div><h2>Connect Firebase for online play</h2>
-   <p class="type small">Online rooms run on your own free Firebase database. Only the host does this. Friends who join with your invite link get connected automatically.</p>
-   <ol class="steps">
-    <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener"><b>console.firebase.google.com</b></a> → <b>Create a project</b> (any name, you can turn Analytics off).</li>
-    <li>In the left menu: <b>Build → Realtime Database → Create Database</b>. Pick <b>Singapore (asia-southeast1)</b>, then <b>Start in test mode</b>.</li>
-    <li>Open the <b>Rules</b> tab, replace everything with this, then hit <b>Publish</b>:
-      <pre class="code">${esc(FB_RULES)}</pre><button class="btn ghost sm" onclick="copyText(FB_RULES)">Copy rules</button></li>
-    <li>Click the ⚙️ gear → <b>Project settings</b> → scroll to <b>Your apps</b> → click the <b>&lt;/&gt;</b> (Web) icon → give it a nickname → <b>Register app</b> (skip Hosting).</li>
-    <li>Copy the whole <b>firebaseConfig</b> block it shows you and paste it below. Make sure it has a <b>databaseURL</b> line.</li>
-   </ol>
-   <textarea id="fbcfg" rows="8" placeholder='const firebaseConfig = {&#10;  apiKey: "...",&#10;  authDomain: "...",&#10;  databaseURL: "https://...firebasedatabase.app",&#10;  projectId: "...",&#10;  ...&#10;};'></textarea>
-   <div class="actions"><button class="btn red" onclick="saveFbConfig()">Save & connect →</button></div>
-   <p class="type small muted">Tip: to skip this on every device, paste the same config into <b>index.html</b> where it says <b>FIREBASE_CONFIG</b>, then re-upload to GitHub.</p></div></div>`;
-}
-let FB_AFTER=null;
-function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Copied!'),()=>toast('Couldn\'t copy'));}
-function saveFbConfig(){
-  const o=parseFbConfig(document.getElementById('fbcfg').value);
-  if(!o.apiKey){toast('That doesn\'t look like a Firebase config');return}
-  if(!o.databaseURL){toast('Missing databaseURL — create the Realtime Database first, then copy the config again');return}
-  lsSet('tln:fb',{apiKey:o.apiKey,authDomain:o.authDomain,databaseURL:o.databaseURL,projectId:o.projectId,appId:o.appId});
-  toast('Saved!');const f=FB_AFTER;FB_AFTER=null;f&&f();
-}
+const NOCONN='Your internet might be blocking the game relays (school or office Wi-Fi does this sometimes). Try mobile data, or turn off any VPN or ad blocker, then try again.';
 
 /* --- joining / hosting --- */
 async function openRoom(raw){
   const room=norm(raw).slice(0,5);
-  const fp=location.hash.match(/fb=([^&]+)/);
-  if(fp&&!hasBuiltIn()){const c=paramToCfg(fp[1]);if(c&&c.apiKey&&c.databaseURL)lsSet('tln:fb',c)}
   if(room.length!==5){msgScreen('❓','That room code looks off','Room codes are 5 characters long.','<button class="btn red" onclick="goHome()">Back</button>');return}
   ROOMCODE=room;
-  if(!getFbConfig()){msgScreen('🔌','This phone isn\'t connected yet','Ask your host to send you the <b>invite link</b> (the Invite button in their game) instead of just the code. Opening the link connects you automatically.','<button class="btn ghost" onclick="fbSetupScreen(route)">I\'m the host — set up Firebase</button> <button class="btn red" onclick="goHome()">Back</button>');return}
-  if(!(NET.ref&&NET.room===room)){
-    netLeave();setGenreTheme('');
-    msgScreen('📡','Connecting to room '+room+'…','Hang tight.');
-    try{
-      await fbConnect();
-      const snap=await withTimeout(NET.db.ref('rooms/'+room+'/meta').once('value'),10000);
-      if(!snap.val()){msgScreen('🕵️','Room not found','Nobody\'s running room '+room+'. Double-check the code with your host.','<button class="btn red" onclick="goHome()">Back</button>');return}
-      netAttach(room);
-    }catch(e){msgScreen('📵','Couldn\'t connect',esc(fbError(e)),`<button class="btn red" onclick="route()">Try again</button> <button class="btn ghost" onclick="goHome()">Home</button>`);return}
+  if(NET.room!==room){
+    setGenreTheme('');msgScreen('📡','Connecting to room '+room+'…','Hang tight.');
+    netJoin(room);
+    if(!await waitLive(14000)){if(NET.room!==room)return;netLeave();msgScreen('📵','Couldn\'t connect',NOCONN,`<button class="btn red" onclick="route()">Try again</button> <button class="btn ghost" onclick="goHome()">Home</button>`);return}
+    const t0=Date.now();while(NET.room===room&&!(ROOM&&ROOM.meta)&&Date.now()-t0<9000)await sleep(100);
+    if(NET.room!==room)return;
+    if(!ROOM||!ROOM.meta){netLeave();msgScreen('🕵️','Room not found','Nobody\'s running room '+room+'. Double-check the code with your host.',`<button class="btn red" onclick="route()">Try again</button> <button class="btn ghost" onclick="goHome()">Back</button>`);return}
   }
   PGKEY='tln3room:'+room;PG=loadPG(PGKEY);PG.mode='online';if(!PG.pid){PG.pid=rid();savePG()}
-  const t0=Date.now();while(NET.room===room&&!ROOM&&Date.now()-t0<8000)await sleep(100);
-  if(!ROOM)return;
   C=null;FADE=true;roomRender();markOnline();
 }
 function roomRender(){
@@ -2810,14 +2807,14 @@ function joinAs(){
   const taken=Object.entries(ROOM.players).some(([pid,p])=>pid!==PG.pid&&(p.name||'').toLowerCase()===n.toLowerCase());
   if(taken){toast('Someone already has that name');return}
   lsSet('tln:myname',n);if(document.activeElement)document.activeElement.blur();
-  NET.ref.child('p/'+PG.pid).set({name:n,t:Date.now(),online:true}).then(()=>NET.ref.child('p/'+PG.pid+'/online').onDisconnect().set(false)).catch(e=>toast(fbError(e)));
+  pub('p/'+PG.pid,{name:n,t:Date.now()});heartbeat();
 }
 function lobbyScreen(){nbVisible(false);
   const ps=PG.players;
   app.innerHTML=`<div class="wrap ${FADE?'fadein':''}">${caseHead()}
    <div class="paper lobby" style="margin-top:14px"><div class="cf">🌐 ONLINE ROOM</div>
     <div class="roomcode">${ROOMCODE}</div>
-    <p class="type">Send your crew the <b>invite link</b> — it opens the game and connects them in one tap.</p>
+    <p class="type">Send your crew the <b>invite link</b> or just the code. They open the game, type the code, and they're in.</p>
     <button class="btn red" onclick="share()">📤 Copy invite link</button>
     <h3>In the room (${ps.length})</h3>
     <div class="crew">${ps.map(p=>`<div class="crewrow"><span>${onlineDot(p.pid)}${ROOM.meta.host===p.pid?'👑 ':''}${esc(p.name)}${p.pid===PG.pid?' <i>(you)</i>':''}</span></div>`).join('')}</div>
@@ -2842,21 +2839,13 @@ async function createRoom(){
   if(!name){toast('Type your name first');return}
   lsSet('tln:myname',name);PENDING_NAME=name;
   const caseCode=CODE;
-  if(!getFbConfig()){fbSetupScreen(()=>{CODE=caseCode;createRoom()});return}
-  msgScreen('📡','Opening a room…','Connecting to Firebase.');
-  try{
-    await fbConnect();
-    let room='';
-    for(let i=0;i<6;i++){const r=genRoom();const s=await withTimeout(NET.db.ref('rooms/'+r+'/meta').once('value'),10000);if(!s.val()){room=r;break}}
-    if(!room)throw new Error('No free room code, try again');
-    const pid=rid();
-    lsSet('tln3room:'+room,Object.assign(defPG(),{mode:'online',pid}));
-    await withTimeout(NET.db.ref('rooms/'+room).set({meta:{case:caseCode,host:pid,t:Date.now()},p:{[pid]:{name,t:Date.now(),online:true}},round:1}),10000);
-    netLeave();netAttach(room);PENDING_NAME='';
-    location.hash='room='+room;
-  }catch(e){
-    msgScreen('📵','Couldn\'t open a room',esc(fbError(e)),`<button class="btn red" onclick="go('${caseCode}')">Back</button> ${hasBuiltIn()?'':'<button class="btn ghost" onclick="fbSetupScreen(()=>go(\''+caseCode+'\'))">Fix Firebase setup</button>'}`);
-  }
+  msgScreen('📡','Opening a room…','Connecting.');
+  const room=genRoom(),pid=rid();
+  netJoin(room);
+  if(!await waitLive(14000)){netLeave();msgScreen('📵','Couldn\'t open a room',NOCONN+'<br><br>You can still play together without a room: everyone opens case code <b>'+esc(caseCode)+'</b> on their own phone.',`<button class="btn red" onclick="createRoom()">Try again</button> <button class="btn ghost" onclick="go('${caseCode}')">Back</button>`);return}
+  lsSet('tln3room:'+room,Object.assign(defPG(),{mode:'online',pid}));
+  pub('meta',{case:caseCode,host:pid,t:Date.now()});pub('p/'+pid,{name,t:Date.now()});pub('round',{r:1});
+  PENDING_NAME='';location.hash='room='+room;
 }
 
 route();syncMusicBtn();

@@ -424,6 +424,16 @@ body.board-open .boardtab,body.board-open .nbbtn,body.board-open .musicbtn{displ
 .bclose{margin-left:auto;background:#7a1a12!important}
 .bhint{font-size:12px;color:#c8b48a;padding:5px 12px;background:#17110a;flex-shrink:0}
 .bscroll{flex:1;overflow:auto;touch-action:pan-x pan-y}
+#mapbox{touch-action:pan-x pan-y}
+@media (pointer:coarse){.btool .zbtn{display:none}.mapzoom button:not(.zr){display:none}}
+.pinchhint{font:600 11px Inter,sans-serif;color:#9a927e;margin-right:auto}
+.modal.still,.modal.still .paper{animation:none!important}
+.rsn{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.rchip{background:#f4ecd8;border:1px solid #b8a888;color:#2a2418;border-radius:14px;padding:6px 10px;font:600 12px Inter,sans-serif;text-align:left;cursor:pointer;line-height:1.3}
+.rchip.on{background:#7a1a1e;border-color:#7a1a1e;color:#fff}
+.lab small{font-weight:500;text-transform:none;letter-spacing:0;opacity:.75}
+.afwhy{margin:10px 0}.afwhy .lab{font:800 11px Inter,sans-serif;letter-spacing:.12em}
+.vwhy{display:block;font-size:11px;opacity:.8;margin-top:3px;font-style:italic}
 .bsize{position:relative}
 .cork{position:absolute;left:0;top:0;width:1800px;height:1280px;transform-origin:0 0;
   background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.05) 0 2px,transparent 3px) 0 0/23px 19px,radial-gradient(circle at 70% 60%,rgba(0,0,0,.12) 0 2px,transparent 3px) 0 0/17px 21px,linear-gradient(135deg,#a8743e,#8e5c2c 50%,#a06a36);
@@ -1515,7 +1525,8 @@ function loadPG(key){const p=lsGet(key,null);return p?Object.assign(defPG(),p):d
 function savePG(){PG.tab=TAB;PG.savedAt=Date.now();lsSet(PGKEY,PG)}
 function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
 function openModal(inner,wide){
-  closeModal();
+  const old=document.getElementById('modal');
+  if(old){const pp=old.querySelector('.paper');pp.className='paper'+(wide?' wide':'');pp.innerHTML=inner;old.classList.add('still');return old}
   const m=document.createElement('div');m.className='modal';m.id='modal';
   m.innerHTML='<div class="paper'+(wide?' wide':'')+'">'+inner+'</div>';
   m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))closeModal()});
@@ -1541,8 +1552,26 @@ function route(){
 }
 
 window.addEventListener('hashchange',route);
-function go(code){location.hash='case='+encodeURIComponent(norm(code))}
-function goHome(){history.pushState('',document.title,location.pathname+location.search);route()}
+function nav(h){if(location.hash==='#'+h)route();else location.replace('#'+h)}
+function go(code){nav('case='+encodeURIComponent(norm(code)))}
+/* phone/browser Back inside a case asks before quitting; Home always lands on Home */
+let LEAVING=false;
+function inCase(){return !!(C&&(document.getElementById('caseShell')||online()))}
+function armBack(){if(!(history.state&&history.state.tln))history.pushState({tln:1},'',location.href)}
+function goHome(){
+  if(history.state&&history.state.tln){LEAVING=true;history.back();return}
+  history.replaceState(null,'',location.pathname+location.search);route();
+}
+function askQuit(){
+  if(document.getElementById('board')){closeBoard();return}
+  if(document.getElementById('book')){closeBook();return}
+  if(document.getElementById('modal')){closeModal();return}
+  confirmBox('Quit this case?','Are you sure you want to quit? '+(online()?'The room stays saved — you can rejoin from <b>Continue</b> on the home screen.':PG&&PG.mode?'Your progress is saved — pick it up from <b>Continue</b> on the home screen.':''),'Quit',goHome);
+}
+window.addEventListener('popstate',e=>{
+  if(LEAVING){LEAVING=false;history.replaceState(null,'',location.pathname+location.search);route();return}
+  if(!(e.state&&e.state.tln)&&inCase()&&/(case|room)=/.test(location.hash)){history.pushState({tln:1},'',location.href);askQuit()}
+});
 function joinCode(){const v=norm(document.getElementById('codeIn').value);if(!v){toast('Type a case code first');return}go(v)}
 function pickGenre(g){HOME_GENRE=g;document.querySelectorAll('.chip[data-g]').forEach(c=>c.classList.toggle('on',c.dataset.g===g))}
 
@@ -1595,12 +1624,13 @@ function openCase(raw){
   setGenreTheme(C.genre);recordHistory();
   document.title='Case #'+C.number+' — '+C.title;
   if(!PG.mode)setupView();else renderCase();
+  armBack();
 }
 function caseHead(){
   const G=GENRES[C.genre];
   const rl=['Stage 1 · Statements','Stage 2 · Evidence','Stage 3 · Interviews'][PG.round-1];
   const who=online()?(meIdx()<0&&ROOM.roster?' · 👀 Watching':' · Crew: '+esc(listNames(PG.players.map(p=>p.name)))):host()?' · Crew: '+esc(listNames(PG.players.map(p=>p.name))):' · Following along';
-  return `<div class="topbar"><button class="link" onclick="goHome()">← All cases</button>${PG.mode?'<button class="savebtn" onclick="saveMenu()" title="Save game">💾</button>':''}
+  return `<div class="topbar"><button class="link" onclick="askQuit()">← Quit</button>${PG.mode?'<button class="savebtn" onclick="saveMenu()" title="Save game">💾</button>':''}
     ${online()?`<button class="codechip" onclick="share()"><span class="dot ${NET.status}"></span>ROOM <b>${ROOMCODE}</b> · Invite</button>`:`<button class="codechip" onclick="share()">CASE CODE <b>${CODE}</b> · Share</button>`}</div>
    <div class="paper casehead"><div class="stamp">${PG.revealed?'CASE CLOSED':'CONFIDENTIAL'}</div>
     <div class="cf">CASE FILE #${C.number}</div><h1>${esc(C.title)}</h1>
@@ -1638,15 +1668,32 @@ function startHost(){
 function startFollow(){PG.mode='follow';TAB='file';savePG();FADE=true;renderCase()}
 
 const TABS=[['file','📁 File'],['suspects','👤 Suspects'],['map','🗺️ Map'],['timeline','🕒 Timeline'],['evidence','🧪 Evidence'],['interviews','🎙️ Interviews'],['search','🔎 Search'],['accuse','⚖️ Accuse']];
+/* renders only what changed: the tab bar, header and page stay put */
+let LAST_HEAD='',LAST_TABC='';
 function renderCase(){
   const lock=t=>(t==='evidence'&&PG.round<2)||(t==='interviews'&&PG.round<3);
-  app.innerHTML=`<div class="wrap ${FADE?'fadein':''}">${caseHead()}
-   <nav class="tabs">${TABS.map(([k,l])=>`<button class="tab ${TAB===k?'on':''}" onclick="setTab('${k}')">${l}${lock(k)?'<span class="lk">🔒</span>':''}</button>`).join('')}</nav>
-   <main id="tabc">${tabContent()}</main></div>`;
+  const tabHTML=([k,l])=>l+(lock(k)?'<span class="lk">🔒</span>':'');
+  const head=caseHead(),body=tabContent();
+  const shell=document.getElementById('caseShell');
+  let swapped=true;
+  if(shell&&shell.dataset.k===PGKEY&&!FADE){
+    const hd=document.getElementById('casehd');if(head!==LAST_HEAD){hd.innerHTML=head;LAST_HEAD=head}
+    shell.querySelectorAll('.tabs .tab').forEach(b=>{const k=b.dataset.t,h=tabHTML(TABS.find(x=>x[0]===k));b.classList.toggle('on',TAB===k);if(b.dataset.h!==h){b.innerHTML=h;b.dataset.h=h}});
+    const tc=document.getElementById('tabc');
+    if(body!==LAST_TABC||tc.dataset.t!==TAB){tc.innerHTML=body;tc.dataset.t=TAB;LAST_TABC=body}else swapped=false;
+  }else{
+    app.innerHTML=`<div class="wrap ${FADE?'fadein':''}" id="caseShell" data-k="${esc(PGKEY)}"><div id="casehd">${head}</div>
+     <nav class="tabs">${TABS.map(t=>`<button class="tab ${TAB===t[0]?'on':''}" data-t="${t[0]}" data-h="${esc(tabHTML(t))}" onclick="setTab('${t[0]}')">${tabHTML(t)}</button>`).join('')}</nav>
+     <main id="tabc" data-t="${TAB}">${body}</main></div>`;
+    LAST_HEAD=head;LAST_TABC=body;
+  }
   FADE=false;nbVisible(true);
-  if(TAB==='search'){const i=document.getElementById('sq');if(i){i.value=SEARCH_Q;i.oninput=()=>{SEARCH_Q=i.value;document.getElementById('sres').innerHTML=searchResults()}}}
+  if(swapped&&TAB==='search'){const i=document.getElementById('sq');if(i){i.value=SEARCH_Q;i.oninput=()=>{SEARCH_Q=i.value;document.getElementById('sres').innerHTML=searchResults()}}}
 }
-function setTab(t){TAB=t;savePG();renderCase();const tb=document.querySelector('.tabs');if(tb&&tb.getBoundingClientRect().top<0)tb.scrollIntoView({block:'start'})}
+function setTab(t){if(t===TAB&&document.getElementById('caseShell'))return;TAB=t;savePG();renderCase();
+  const tb=document.querySelector('.tabs');if(!tb)return;
+  if(tb.getBoundingClientRect().top<0)window.scrollTo({top:window.scrollY+tb.getBoundingClientRect().top-4});
+  const b=tb.querySelector('.tab.on');if(b){const l=b.offsetLeft,r=l+b.offsetWidth;if(l<tb.scrollLeft)tb.scrollTo({left:l-12,behavior:'smooth'});else if(r>tb.scrollLeft+tb.clientWidth)tb.scrollTo({left:r-tb.clientWidth+12,behavior:'smooth'})}}
 function tabContent(){return ({file:fileTab,suspects:suspectsTab,map:mapTab,timeline:timelineTab,evidence:evidenceTab,interviews:interviewsTab,search:searchTab,accuse:accuseTab}[TAB]||fileTab)()}
 function fileTab(){
   const away=C.suspects.filter(s=>s.away).length;
@@ -1838,26 +1885,54 @@ function accuseTab(){
    <div class="actions"><button class="btn red" ${canReveal?'':'disabled'} onclick="reveal()">Reveal the Truth${online()?' (for everyone)':''}</button></div></div>`;
 }
 function accuse(i){
-  const p=PG.players[i];let sel=[],none=false,why='';
+  const p=PG.players[i];let sel=[],none=false,picked=[];
   if(online())draw();else passPhone(p.name,draw);
   function draw(){
     const m=openModal(`<div class="cf">${esc(p.name.toUpperCase())}'S ACCUSATION</div><h2>Who was involved?</h2>
      <p class="type small">Tap everyone you're accusing.</p>
      <div class="vgrid">${C.suspects.map((s,j)=>`<button class="vopt ${sel.includes(j)?'on':''}" data-s="${j}"><span class="av">${avatarSVG(s)}</span>${esc(s.first)}</button>`).join('')}
       <button class="vopt ${none?'on':''}" data-n="1"><span class="av q">∅</span>None of them</button></div>
-     <div class="lab">Your theory (optional — read it out at the reveal)</div><textarea id="why" rows="2">${esc(why)}</textarea>
+     ${reasonPicker(sel,none,picked,'data-rs')}
      <p class="type small">${none?'You\'re saying it was an outside job.':sel.length?'Accusing: <b>'+esc(listNames(sel.map(j=>C.suspects[j].first)))+'</b>':'Pick at least one.'} Worth up to ${PTS[PG.round]} points. No take-backs.</p>
-     <div class="actions end"><button class="btn ghost" data-close>Cancel</button><button class="btn red" id="lk" ${sel.length||none?'':'disabled'}>🔒 Lock it in</button></div>`,true);
-    const w=m.querySelector('#why');w.oninput=()=>{why=w.value};
-    m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const j=+b.dataset.s;none=false;sel=sel.includes(j)?sel.filter(x=>x!==j):sel.concat(j);draw()});
-    m.querySelector('[data-n]').onclick=()=>{none=!none;sel=[];draw()};
+     <div class="actions end"><button class="btn ghost" data-close>Cancel</button><button class="btn red" id="lk" ${(sel.length||none)&&picked.length?'':'disabled'}>🔒 Lock it in</button></div>`,true);
+    const sc=m.querySelector('.paper').scrollTop;
+    m.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>{picked=togglePick(picked,b.dataset.rs);redraw()});
+    m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const j=+b.dataset.s;none=false;sel=sel.includes(j)?sel.filter(x=>x!==j):sel.concat(j);picked=prunePicked(sel,none,picked);redraw()});
+    m.querySelector('[data-n]').onclick=()=>{none=!none;sel=[];picked=prunePicked(sel,none,picked);redraw()};
     m.querySelector('#lk').onclick=()=>{
       const acc=none?[]:sel.slice().sort((a,b)=>a-b);
       closeModal();
-      if(online()){pub('a/'+PG.pid,{acc:acc.length?acc.join(','):'none',round:PG.round,why:why.trim()});toast('Locked in!');return}
-      p.acc=acc;p.accRound=PG.round;p.why=why.trim();savePG();renderCase();toast('Locked in. Pass it on!')};
+      const why=reasonText(sel,none,picked);
+      if(online()){pub('a/'+PG.pid,{acc:acc.length?acc.join(','):'none',round:PG.round,why});toast('Locked in!');return}
+      p.acc=acc;p.accRound=PG.round;p.why=why;savePG();renderCase();toast('Locked in. Pass it on!')};
   }
+  function redraw(){const pp=document.querySelector('#modal .paper'),y=pp?pp.scrollTop:0;draw();const np=document.querySelector('#modal .paper');if(np)np.scrollTop=y}
 }
+/* reasons: tap, don't type — built only from what this crew has actually gathered */
+function reasonOptions(sel,none){
+  const o=[],add=(id,txt)=>o.push({id,txt:txt.length>96?txt.slice(0,94)+'…':txt});
+  if(none){add('x1','Every suspect\'s alibi seems to hold up');add('x2','Signs point to someone from outside');}
+  sel.forEach(j=>{const s=C.suspects[j],f=s.first;
+    add('m'+j,'Motive — '+f+': '+shorten(s.motive,70));
+    add('g'+j,'Nobody can back up '+f+'\'s alibi at the time of death');
+    add('c'+j,f+'\'s story doesn\'t match someone else\'s');
+    add('o'+j,f+' had the chance to reach '+C.victim.first+' unseen');
+    if(PG.round>=3)add('f'+j,f+'\'s follow-up interview didn\'t add up');});
+  if(PG.round>=2)C.evidence.forEach((e,i)=>add('e'+i,'Lab E'+(i+1)+': '+e.t));
+  roomIds().forEach(k=>{if(PG.searched&&PG.searched[k]&&C.roomClues[k])add('r'+k,'Found in the '+roomLabel(k)+': '+shorten(C.roomClues[k],64))});
+  (C.sightings||[]).forEach((x,k)=>{if(x.stage<=PG.round&&!isAway(x.i))add('w'+k,'Witness: '+shorten(x.text,80))});
+  (PG.timeline||[]).filter(e=>e&&e.kind==='event'&&e.src!=='your notebook'&&!/^s/.test(e.key||'')).slice(-6).forEach(e=>add('t'+(e.key||e.id),'Timeline: '+(typeof e.t==='number'?fmt(e.t)+' — ':'')+shorten(String(e.text||''),64)));
+  (PG.notesList||[]).slice(-8).forEach(n=>add('n'+n.id,'My note: '+shorten(n.text,72)));
+  return o;
+}
+function reasonPicker(sel,none,picked,attr){
+  if(!sel.length&&!none)return `<div class="lab">Why? <small>Pick who first, then your reasons</small></div>`;
+  const opts=reasonOptions(sel,none);
+  return `<div class="lab">Why? <small>Tap at least 1 reason (up to 4) — based on what you found</small></div><div class="rsn">${opts.map(r=>`<button class="rchip ${picked.includes(r.id)?'on':''}" ${attr}="${esc(r.id)}">${picked.includes(r.id)?'✔ ':''}${esc(r.txt)}</button>`).join('')}</div>`;
+}
+function reasonText(sel,none,picked){const opts=reasonOptions(sel,none);return picked.map(id=>(opts.find(r=>r.id===id)||{}).txt).filter(Boolean).join(' · ')}
+function prunePicked(sel,none,picked){const ok=new Set(reasonOptions(sel,none).map(r=>r.id));return picked.filter(id=>ok.has(id))}
+function togglePick(picked,id){return picked.includes(id)?picked.filter(x=>x!==id):picked.length>=4?(toast('Up to 4 reasons'),picked):picked.concat(id)}
 function reveal(){
   confirmBox('Reveal the truth?',online()?'This plays the reveal on everyone\'s phone at the same time.':'Everyone\'s locked in. Gather around…','Reveal',()=>{
     if(online()){pub('reveal',{t:Date.now()});return}
@@ -1866,7 +1941,7 @@ function reveal(){
 }
 function revealView(){
   const cul=C.culprits.map(i=>C.suspects[i]), scored=host()||online();
-  const rows=scored?PG.players.map(p=>{const sc=accScore(p.acc,p.accRound),full=sc&&sc===(PTS[p.accRound]||0);return `<div class="vrow ${sc?'win':'lose'}"><b>${esc(p.name)}</b><span>${esc(accName(p.acc))}${p.why?` — <i>"${esc(p.why)}"</i>`:''}</span><em>${sc?(full?'✔':'½')+' +'+sc:'✘ 0'}</em></div>`}).join(''):'';
+  const rows=scored?PG.players.map(p=>{const sc=accScore(p.acc,p.accRound),full=sc&&sc===(PTS[p.accRound]||0);return `<div class="vrow ${sc?'win':'lose'}"><b>${esc(p.name)}</b><span>${esc(accName(p.acc))}${p.why?`<small class="vwhy">Because: ${esc(p.why)}</small>`:''}</span><em>${sc?(full?'✔':'½')+' +'+sc:'✘ 0'}</em></div>`}).join(''):'';
   const news=scored?(PG.news||makeNews(C,PG)):null;
   return `<div class="paper reveal"><div class="head"><span class="bigstamp">${cul.length?'CASE CLOSED':'CASE STAYS OPEN'}</span>
     <div class="cf" style="margin-top:18px">THE TRUTH</div><div class="structl">${esc(C.structLabel)}</div>
@@ -1892,7 +1967,7 @@ function share(){
 function online(){return PG&&PG.mode==='online'}
 function meIdx(){return online()?PG.players.findIndex(p=>p.pid===PG.pid):-1}
 function isHostMe(){return online()&&ROOM&&ROOM.meta&&ROOM.meta.host===PG.pid}
-function joinRoom(){const v=norm(document.getElementById('roomIn').value);if(v.length!==5){toast('Room codes are 5 characters');return}location.hash='room='+v}
+function joinRoom(){const v=norm(document.getElementById('roomIn').value);if(v.length!==5){toast('Room codes are 5 characters');return}nav('room='+v)}
 function openStage(stage){if(online()){pub('round',{r:stage});return}PG.round=stage;savePG();renderCase()}
 function voteAgain(stage){if(online()){pub('att/'+stage,{n:(ROOM.att[stage]||0)+1});return}delete PG.votes[stage];savePG();renderCase()}
 function countdownReveal(){
@@ -2297,7 +2372,7 @@ function mapTab(){
   const legend=C.suspects.map((s,i)=>isAwayIdx(i)?'':`<span class="lg" onclick="MAP_FLOOR='${floorOfRoom(s.claim.room)}';renderCase()"><i style="background:${CHIPC[i]}">${esc(s.first[0])}</i>${esc(s.first)}</span>`).join('');
   return `<div class="mapwrap"><div class="maphead"><div><div class="cf">CRIME SCENE MAP</div><b>${esc(C.place)}</b></div></div>
    <div class="floors">${fl}</div>
-   <div class="mapzoom"><button onclick="mapZoom(-1)" aria-label="Zoom out">−</button><span id="zlab">${Math.round(MAP_Z*100)}%</span><button onclick="mapZoom(1)" aria-label="Zoom in">＋</button><button onclick="mapZoom(0)" class="zr">Fit</button></div>
+   <div class="mapzoom"><span class="pinchhint">🤏 Pinch to zoom</span><button onclick="mapZoom(-1)" aria-label="Zoom out">−</button><span id="zlab">${Math.round(MAP_Z*100)}%</span><button onclick="mapZoom(1)" aria-label="Zoom in">＋</button><button onclick="mapZoom(0)" class="zr">Fit</button></div>
    <div id="mapbox" style="--z:${MAP_Z}">${drawEstate(MAP_FLOOR,t)}</div>
    <div class="timebar"><div class="tlab"><span>⏱ <b id="tval">${fmt(t)}</b></span><span id="ttag" class="${t===C.T?'tod':''}">${t===C.T?'🩸 estimated time of death':''}</span></div>
      <input type="range" id="trange" min="${lo}" max="${hi}" step="5" value="${t}" oninput="mapTime(+this.value)">
@@ -2377,10 +2452,10 @@ function openBoard(){
      <button data-m="cut" title="Tap a string to cut it">✂️ Cut</button>
      <button onclick="newSticky()">📝 Sticky</button>
      <button onclick="pinNotesPicker()">📒 Pin notes</button>
-     <button onclick="boardZoom(-.1)">−</button><button onclick="boardZoom(.1)">+</button>
+     <button class="zbtn" onclick="boardZoom(-.1)">−</button><button class="zbtn" onclick="boardZoom(.1)">+</button>
      <button onclick="tidyBoard()" title="Reset card positions">↺</button>
      <button class="bclose" onclick="closeBoard()">✕</button></div>
-   <div class="bhint" id="bhint">Drag anything. Use 🧵 to tie clues together with red string.</div>
+   <div class="bhint" id="bhint">Drag anything. Pinch with two fingers to zoom. Use 🧵 to tie clues together with red string.</div>
    <div class="bscroll" id="bscroll"><div class="bsize" id="bsize"><div class="cork" id="cork"></div></div></div>`;
   ov.querySelectorAll('[data-m]').forEach(bt=>bt.onclick=()=>{BMODE=bt.dataset.m;BSEL=null;ov.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===bt));
     document.getElementById('bhint').textContent={move:'Drag anything. Tap a card to open it.',connect:'Tap one card, then another, to tie a red string between them.',cut:'Tap a red string to cut it.'}[BMODE];renderBoard()});
@@ -2429,14 +2504,30 @@ function pinNotesPicker(){
    <div class="actions end"><button class="btn red" id="pdone">Done</button></div>`,true);
   m.querySelector('#pdone').onclick=()=>{b.notes=[...m.querySelectorAll('input[data-id]')].filter(x=>x.checked).map(x=>+x.dataset.id);savePG();closeModal();renderBoard()};
 }
+/* pinch to zoom — board and map (two fingers on a phone, ctrl/trackpad pinch on a computer) */
+function boardSetZ(z){const b=PG.board;b.zoom=z;const bs=document.getElementById('bsize'),ck=document.getElementById('cork');if(bs){bs.style.width=BW*z+'px';bs.style.height=BH*z+'px'}if(ck)ck.style.transform=`scale(${z})`}
+function mapSetZ(z){MAP_Z=z;const box=document.getElementById('mapbox');if(box){box.style.setProperty('--z',z);box.classList.toggle('zoomed',z>1)}const zl=document.getElementById('zlab');if(zl)zl.textContent=Math.round(z*100)+'%'}
+const PINCH={bscroll:{get:()=>PG.board.zoom,set:boardSetZ,min:.3,max:1.8,end:()=>savePG()},mapbox:{get:()=>MAP_Z,set:mapSetZ,min:1,max:4,end:()=>{}}};
+let PZ=null;
+function pinchStart(el,cx,cy,d){const cfg=PINCH[el.id],r=el.getBoundingClientRect(),z=cfg.get(),mx=cx-r.left,my=cy-r.top;
+  PZ={el,cfg,d0:d,z0:z,fx:(el.scrollLeft+mx)/z,fy:(el.scrollTop+my)/z,r};
+  if(BDRAG){BDRAG.el.style.left=BDRAG.ox+'px';BDRAG.el.style.top=BDRAG.oy+'px';BDRAG.el.classList.remove('dragging');BDRAG=null;drawStrings()}}
+function pinchTo(z,cx,cy){const P=PZ;z=Math.max(P.cfg.min,Math.min(P.cfg.max,z));P.cfg.set(z);P.el.scrollLeft=P.fx*z-(cx-P.r.left);P.el.scrollTop=P.fy*z-(cy-P.r.top)}
+const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY),tmid=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
+document.addEventListener('touchstart',e=>{if(e.touches.length!==2)return;const el=e.target.closest&&e.target.closest('#bscroll,#mapbox');if(!el)return;e.preventDefault();const[mx,my]=tmid(e.touches);pinchStart(el,mx,my,tdist(e.touches))},{passive:false});
+document.addEventListener('touchmove',e=>{if(!PZ||e.touches.length<2)return;e.preventDefault();const[mx,my]=tmid(e.touches);pinchTo(PZ.z0*tdist(e.touches)/PZ.d0,mx,my)},{passive:false});
+document.addEventListener('touchend',e=>{if(PZ&&e.touches.length<2){PZ.cfg.end();PZ=null}});
+document.addEventListener('gesturestart',e=>{if(e.target.closest&&e.target.closest('#bscroll,#mapbox'))e.preventDefault()});
+document.addEventListener('wheel',e=>{if(!e.ctrlKey)return;const el=e.target.closest&&e.target.closest('#bscroll,#mapbox');if(!el)return;e.preventDefault();
+  pinchStart(el,e.clientX,e.clientY,1);pinchTo(PZ.z0*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);PZ.cfg.end();PZ=null},{passive:false});
 /* dragging & tapping */
 document.addEventListener('pointerdown',e=>{
-  const card=e.target.closest&&e.target.closest('#cork .bcard');if(!card)return;
+  const card=e.target.closest&&e.target.closest('#cork .bcard');if(!card||PZ||(e.pointerType==='touch'&&BDRAG))return;
   const z=PG.board.zoom;BDRAG={id:card.dataset.id,el:card,sx:e.clientX,sy:e.clientY,ox:card.offsetLeft,oy:card.offsetTop,moved:false,z};
   card.setPointerCapture&&card.setPointerCapture(e.pointerId);
 });
 document.addEventListener('pointermove',e=>{
-  if(!BDRAG)return;const dx=(e.clientX-BDRAG.sx)/BDRAG.z,dy=(e.clientY-BDRAG.sy)/BDRAG.z;
+  if(!BDRAG||PZ)return;const dx=(e.clientX-BDRAG.sx)/BDRAG.z,dy=(e.clientY-BDRAG.sy)/BDRAG.z;
   if(!BDRAG.moved&&Math.hypot(dx,dy)<6)return;
   if(BMODE!=='move')return;
   BDRAG.moved=true;e.preventDefault();
@@ -2549,7 +2640,7 @@ function bkArrest(){
   const shown=cul||sel;
   const photo=shown.length===1?avatarSVG(C.suspects[shown[0]]):shown.length>1?avatarSVG(C.suspects[shown[0]]):unknownSVG();
   const idNo='A '+(hashStr('ID|'+C.code)%9000+1000);
-  const officers=host()&&!PG.revealed?`<div class="aoff">Who's filing? ${PG.players.map((pl,i)=>`<button class="${BOOK_OFFICER===i?'on':''} ${pl.acc!=null?'done':''}" ${pl.acc!=null?'disabled':''} onclick="passPhone('${esc(pl.name).replace(/'/g,'')}',()=>{closeModal();BOOK_OFFICER=${i};BOOK_SEL=[];BOOK_NONE=false;renderBook()})">${pl.acc!=null?'✔ ':''}${esc(pl.name)}</button>`).join('')}</div>`:'';
+  const officers=host()&&!PG.revealed?`<div class="aoff">Who's filing? ${PG.players.map((pl,i)=>`<button class="${BOOK_OFFICER===i?'on':''} ${pl.acc!=null?'done':''}" ${pl.acc!=null?'disabled':''} onclick="passPhone('${esc(pl.name).replace(/'/g,'')}',()=>{closeModal();BOOK_OFFICER=${i};BOOK_SEL=[];BOOK_NONE=false;BOOK_RS=[];renderBook()})">${pl.acc!=null?'✔ ':''}${esc(pl.name)}</button>`).join('')}</div>`:'';
   const names=PG.revealed?(cul.length?cul.map(i=>C.suspects[i].name).join(', '):'Unknown (outside job)'):none?'Unknown':sel.length?sel.map(i=>C.suspects[i].name).join(', '):'???';
   return `<div class="af"><div class="afhead"><b>METROPOLITAN POLICE DEPARTMENT</b><span>ARREST FORM</span></div>
    <div class="afrow"><span>Date: <i>${new Date().toLocaleDateString('en-GB')}</i></span><span>Identification No.: <i class="red">${idNo}</i></span></div>
@@ -2565,18 +2656,24 @@ function bkArrest(){
     <div class="afstamp">${esc(C.place.replace(/^The /,'').split(' ')[0].toUpperCase())}<br>${idNo.replace(' ','')}</div>
     <div><small>Signature:</small><span class="sig">${locked||PG.revealed?esc(officer):''}</span></div></div>
    ${PG.revealed?`<div class="afclosed">CASE CLOSED</div><p class="afnote">${esc(C.structLabel)}. <a onclick="closeBook();setTab('accuse')">Read the full solution →</a></p>`:
-     editable?`<button class="btn red block" ${sel.length||none?'':'disabled'} onclick="bookSign()">✍️ Sign & file the arrest</button><p class="afnote">Worth ${PTS[PG.round]} points if you're exactly right. No take-backs.</p>`:
-     locked?`<div class="affiled">FILED</div><p class="afnote">${PG.players.filter(x=>x.acc!=null).length} of ${PG.players.length} detectives have filed. ${PG.players.every(x=>x.acc!=null)?'<a onclick="closeBook();reveal()">Reveal the truth →</a>':''}</p>`:
+     editable?`<div class="afwhy">${reasonPicker(sel,none,BOOK_RS,'data-brs')}</div><button class="btn red block" ${(sel.length||none)&&BOOK_RS.length?'':'disabled'} onclick="bookSign()">✍️ Sign & file the arrest</button><p class="afnote">Worth ${PTS[PG.round]} points if you're exactly right. No take-backs.</p>`:
+     locked?`${p.why?`<p class="afnote"><b>Reasons:</b> ${esc(p.why)}</p>`:''}<div class="affiled">FILED</div><p class="afnote">${PG.players.filter(x=>x.acc!=null).length} of ${PG.players.length} detectives have filed. ${PG.players.every(x=>x.acc!=null)?'<a onclick="closeBook();reveal()">Reveal the truth →</a>':''}</p>`:
      host()?`<p class="afnote">Pick who's filing, pass them the phone, and let them choose in secret.</p>`:!online()?``:`<p class="afnote">You're watching this case.</p>`}</div>`;
 }
-function bookPick(i){if(i===-1){BOOK_NONE=!BOOK_NONE;BOOK_SEL=[]}else{BOOK_NONE=false;BOOK_SEL=BOOK_SEL.includes(i)?BOOK_SEL.filter(x=>x!==i):BOOK_SEL.concat(i)}renderBook()}
+let BOOK_RS=[];
+function bookPick(i){if(i===-1){BOOK_NONE=!BOOK_NONE;BOOK_SEL=[]}else{BOOK_NONE=false;BOOK_SEL=BOOK_SEL.includes(i)?BOOK_SEL.filter(x=>x!==i):BOOK_SEL.concat(i)}BOOK_RS=prunePicked(BOOK_SEL,BOOK_NONE,BOOK_RS);renderBookKeep()}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#book [data-brs]');if(b)bookReason(b.dataset.brs)});
+function bookReason(id){BOOK_RS=togglePick(BOOK_RS,id);renderBookKeep()}
+function renderBookKeep(){const pg=document.querySelector('#book .bpage, #book .page, #book .bkpage');const y=pg?pg.scrollTop:0;renderBook();const np=document.querySelector('#book .bpage, #book .page, #book .bkpage');if(np)np.scrollTop=y}
 function bookSign(){
   const acc=BOOK_NONE?[]:BOOK_SEL.slice().sort((a,b)=>a-b);
+  if(!BOOK_RS.length){toast('Pick at least one reason');return}
+  const why=reasonText(BOOK_SEL,BOOK_NONE,BOOK_RS);
   confirmBox('File this arrest?','You\'re charging: '+esc(acc.length?listNames(acc.map(i=>C.suspects[i].name)):'nobody — an outside job')+'. No take-backs.','Sign & file',()=>{
-    if(online()){pub('a/'+PG.pid,{acc:acc.length?acc.join(','):'none',round:PG.round,why:''});toast('Arrest filed!')}
-    else if(host()){const p=PG.players[BOOK_OFFICER];p.acc=acc;p.accRound=PG.round;p.why='';savePG();BOOK_OFFICER=null;toast('Filed. Pass the phone on!')}
+    if(online()){pub('a/'+PG.pid,{acc:acc.length?acc.join(','):'none',round:PG.round,why});toast('Arrest filed!')}
+    else if(host()){const p=PG.players[BOOK_OFFICER];p.acc=acc;p.accRound=PG.round;p.why=why;savePG();BOOK_OFFICER=null;toast('Filed. Pass the phone on!')}
     else{PG.revealed=true;savePG()}
-    BOOK_SEL=[];BOOK_NONE=false;setTimeout(()=>{renderBook();if(TAB==='accuse')renderCase()},300)});
+    BOOK_SEL=[];BOOK_NONE=false;BOOK_RS=[];setTimeout(()=>{renderBook();if(TAB==='accuse')renderCase()},300)});
 }
 function bkSuspects(){return `<div class="bh">SUSPECT FILES</div><div class="bkgrid">${C.suspects.map((s,i)=>`<button class="bkpol ${BOOK_SUS===i?'on':''}" onclick="BOOK_SUS=${i};${bookWide()?'':'BOOK_PAGE=3;'}renderBook()"><span class="afp">${avatarSVG(s)}</span><b>${esc(s.name)}</b><small>${esc(s.role)}</small>${isAway(i)?'<em>not questioned</em>':''}</button>`).join('')}</div><p class="afnote">Tap a portrait to open the file.</p>`}
 function bkDossier(){const i=BOOK_SUS,s=C.suspects[i],a=isAway(i);
@@ -2606,7 +2703,7 @@ function saveMenu(){
 }
 function saveSlot(n){savePG();lsSet('tln:slot'+n,{code:CODE,room:online()?ROOMCODE:null,title:C.title,t:Date.now(),pg:PG,key:PGKEY});toast('Saved to slot '+n+' 💾');saveMenu()}
 function loadSlot(n){const sl=lsGet('tln:slot'+n,null);if(!sl)return;lsSet(sl.key||('tln3:'+sl.code),sl.pg);closeModal();toast('Loaded '+sl.title);
-  if(sl.room)location.hash='room='+sl.room;else if(location.hash==='#case='+sl.code)route();else go(sl.code)}
+  if(sl.room)nav('room='+sl.room);else if(location.hash==='#case='+sl.code)route();else go(sl.code)}
 function exportSave(){
   const data={game:'the-last-night',v:8,t:Date.now(),items:{}};
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^tln/.test(k))data.items[k]=localStorage.getItem(k)}}catch(e){Object.keys(MEM).forEach(k=>data.items[k]=JSON.stringify(MEM[k]))}
@@ -2618,7 +2715,10 @@ function continueList(){
   const out=[];const seen=new Set();
   [1,2,3].forEach(n=>{const sl=lsGet('tln:slot'+n,null);if(sl){out.push({label:'Slot '+n,title:sl.title,t:sl.t,act:`loadSlot(${n})`});}});
   lsGet('tln:history',[]).slice().reverse().forEach(h=>{if(seen.has(h.code)||h.done)return;const pg=lsGet('tln3:'+h.code,null);if(pg&&pg.mode&&!pg.revealed){seen.add(h.code);let title=h.code;try{title=caseHeader(h.code).title}catch(e){}out.push({label:'In progress',title,t:pg.savedAt||h.t,act:`go('${h.code}')`})}});
-  return out.slice(0,6);
+  {const pg=lsGet('tln3:BLACKWOOD',null);if(pg&&pg.mode&&!pg.revealed)out.push({label:'In progress',title:PRESET.title,t:pg.savedAt||0,act:`go('BLACKWOOD')`})}
+  savedRooms().slice(0,4).forEach(r=>{let title=r.case;try{title=isPresetCode(r.case)?PRESET.title:caseHeader(r.case).title}catch(e){}
+    out.push({label:'🌐 Room '+r.room,title:title+' · '+(r.started?'Stage '+r.round:'Lobby')+(r.names&&r.names.length?' · '+r.names.slice(0,4).join(', '):''),t:r.t,act:`nav('room=${r.room}')`})});
+  return out.sort((a,b)=>b.t-a.t).slice(0,8);
 }
 
 /* =====================================================================
@@ -2644,7 +2744,7 @@ const TE=new TextEncoder(),TD=new TextDecoder();
 /* --- tiny MQTT 3.1.1 client over WebSocket (built in, no library to download) --- */
 function mqttLink(url,room){
   const base=NS+'/'+room+'/';
-  const L={kind:'mqtt',url,live:false,closed:false,ws:null,buf:new Uint8Array(0),tries:0,ping:null,to:null,q:new Map()};
+  const L={kind:'mqtt',url,live:false,closed:false,ws:null,buf:new Uint8Array(0),tries:0,ping:null,to:null,q:new Map(),seen:{}};
   const s2=s=>{const b=TE.encode(s);return[b.length>>8,b.length&255,...b]};
   const vl=n=>{const o=[];do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;o.push(d)}while(n>0);return o};
   const pkt=(h,body)=>new Uint8Array([h,...vl(body.length),...body]);
@@ -2667,10 +2767,10 @@ function mqttLink(url,room){
       if(b.length<i+n)return;const body=b.subarray(i,i+n),type=b[0]>>4,qos=(b[0]>>1)&3;L.buf=b.slice(i+n);
       if(type===2){if(body[1]!==0){try{L.ws.close()}catch(e){}return}
         L.live=true;L.tries=0;clearTimeout(L.to);raw(pkt(0x82,[0,1,...s2(base+'#'),0]));
-        L.ping=setInterval(()=>raw(pkt(0xC0,[])),25000);L.q.forEach((p,k)=>raw(pubPkt(k,p)));L.q.clear();netState()}
+        L.ping=setInterval(()=>raw(pkt(0xC0,[])),25000);L.q.forEach((p,k)=>raw(pubPkt(k,p)));L.q.clear();netState();resyncLater(L)}
       else if(type===3){const tl=(body[0]<<8)|body[1];const topic=TD.decode(body.subarray(2,2+tl));let o=2+tl;
         if(qos>0){raw(pkt(0x40,[body[o],body[o+1]]));o+=2}
-        if(topic.startsWith(base))onRelay(topic.slice(base.length),TD.decode(body.subarray(o)))}
+        if(topic.startsWith(base))onRelay(topic.slice(base.length),TD.decode(body.subarray(o)),L)}
     }
   }
   L.send=(k,p)=>{if(L.live)raw(pubPkt(k,p));else L.q.set(k,p)};
@@ -2680,14 +2780,14 @@ function mqttLink(url,room){
 /* --- ntfy.sh: plain HTTPS (port 443), works where other ports are blocked --- */
 function ntfyLink(host,room){
   const topic=NS+'-'+room;
-  const L={kind:'ntfy',url:host,live:false,closed:false,es:null,last:'all',tries:0};
+  const L={kind:'ntfy',url:host,live:false,closed:false,es:null,last:'all',tries:0,seen:{}};
   function open(){
     let es;try{es=new EventSource(host+'/'+topic+'/sse?since='+L.last)}catch(e){return}
     L.es=es;
-    es.onopen=()=>{L.live=true;L.tries=0;netState()};
+    es.onopen=()=>{L.live=true;L.tries=0;netState();resyncLater(L)};
     es.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(e){return}
       if(m.event!=='message'||typeof m.message!=='string')return;L.last=m.id||L.last;
-      const i=m.message.indexOf('\n');if(i>0)onRelay(m.message.slice(0,i),m.message.slice(i+1))};
+      const i=m.message.indexOf('\n');if(i>0)onRelay(m.message.slice(0,i),m.message.slice(i+1),L)};
     es.onerror=()=>{es.close();L.live=false;netState();if(!L.closed)setTimeout(()=>{if(!L.closed)open()},Math.min(15000,1500*Math.pow(2,L.tries++)))};
   }
   L.send=(k,p)=>{fetch(host+'/'+topic,{method:'POST',body:k+'\n'+p}).catch(()=>{})};
@@ -2697,13 +2797,23 @@ function ntfyLink(host,room){
 
 /* --- room state: every key keeps only its newest value (stamp + sender breaks ties) --- */
 function newer(a,b){return !b||a.t>b.t||(a.t===b.t&&a.s>b.s)}
-function onRelay(k,payload){
+function onRelay(k,payload,L){
   if(!ROOM)return;let m;try{m=JSON.parse(payload)}catch(e){return}
   if(!m||typeof m.t!=='number')return;
-  if(k.startsWith('hb/')){if(m.d&&Math.abs(Date.now()-m.d.at)<300000)NET.hb[k.slice(3)]=Date.now();scheduleRoomRender();return}
+  if(k.startsWith('hb/')){if(m.d&&Math.abs(Date.now()-m.d.at)<300000){const pid=k.slice(3),was=isOn(pid);NET.hb[pid]=Date.now();if(!was)scheduleRoomRender()}return}
+  if(L&&newer(m,L.seen[k]))L.seen[k]=m;
   if(!newer(m,NET.seen[k]))return;
-  NET.seen[k]=m;NET.clock=Math.max(NET.clock,m.t);applyKey(k,m.d);scheduleRoomRender();
+  NET.seen[k]=m;NET.clock=Math.max(NET.clock,m.t);applyKey(k,m.d);snapSave();scheduleRoomRender();
 }
+/* saved multiplayer games: every phone keeps a copy of the room, and puts back
+   anything a relay forgot — so an unfinished game can be picked up days later */
+let SNAP_T=null;
+function snapSave(){if(!NET.room)return;const room=NET.room;clearTimeout(SNAP_T);SNAP_T=setTimeout(()=>{if(NET.room!==room||!ROOM||!ROOM.meta)return;
+  const names=Object.values(ROOM.players).map(p=>p.name).filter(Boolean);
+  lsSet('tln:rsnap:'+room,{seen:NET.seen,t:Date.now(),case:ROOM.meta.case,round:ROOM.round||1,started:!!ROOM.roster,revealed:!!ROOM.reveal,names})},400)}
+function snapLoad(room){const sn=lsGet('tln:rsnap:'+room,null);if(!sn||!sn.seen)return false;Object.entries(sn.seen).forEach(([k,m])=>onRelay(k,JSON.stringify(m)));return !!(ROOM&&ROOM.meta)}
+function resyncLater(L){setTimeout(()=>{if(!L.live||L.closed||!NET.room)return;Object.entries(NET.seen).forEach(([k,m])=>{if(newer(m,L.seen[k]))L.send(k,JSON.stringify(m))})},3500)}
+function savedRooms(){const out=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k||!k.startsWith('tln:rsnap:'))continue;const sn=lsGet(k,null);if(!sn||sn.revealed||!sn.case)continue;out.push(Object.assign({room:k.slice(10)},sn))}}catch(e){}return out.sort((a,b)=>b.t-a.t)}
 function applyKey(k,d){
   const R=ROOM,parts=k.split('/');
   switch(parts[0]){
@@ -2733,8 +2843,9 @@ function heartbeat(){
 function markOnline(){if(ROOM&&PG&&PG.pid&&ROOM.players[PG.pid])heartbeat()}
 function netJoin(room){
   netLeave();NET.room=room;NET.seen={};NET.hb={};ROOM=emptyRoom();NET.status='wait';
+  snapLoad(room);
   NET.links=RELAYS.mqtt.map(u=>mqttLink(u,room)).concat(RELAYS.ntfy.map(h=>ntfyLink(h,room)));
-  NET.hbT=setInterval(markOnline,20000);
+  NET.hbT=setInterval(()=>{markOnline();scheduleRoomRender()},20000);
 }
 function netLeave(){NET.links.forEach(L=>L.close());NET.links=[];clearInterval(NET.hbT);NET.room=null;NET.status='off';ROOM=null}
 function netState(){
@@ -2779,7 +2890,7 @@ async function openRoom(raw){
     if(!ROOM||!ROOM.meta){netLeave();msgScreen('🕵️','Room not found','Nobody\'s running room '+room+'. Double-check the code with your host.',`<button class="btn red" onclick="route()">Try again</button> <button class="btn ghost" onclick="goHome()">Back</button>`);return}
   }
   PGKEY='tln3room:'+room;PG=loadPG(PGKEY);PG.mode='online';if(!PG.pid){PG.pid=rid();savePG()}
-  C=null;FADE=true;roomRender();markOnline();
+  C=null;FADE=true;roomRender();markOnline();armBack();
 }
 function roomRender(){
   if(!ROOM||!ROOM.meta)return;
@@ -2845,7 +2956,7 @@ async function createRoom(){
   if(!await waitLive(14000)){netLeave();msgScreen('📵','Couldn\'t open a room',NOCONN+'<br><br>You can still play together without a room: everyone opens case code <b>'+esc(caseCode)+'</b> on their own phone.',`<button class="btn red" onclick="createRoom()">Try again</button> <button class="btn ghost" onclick="go('${caseCode}')">Back</button>`);return}
   lsSet('tln3room:'+room,Object.assign(defPG(),{mode:'online',pid}));
   pub('meta',{case:caseCode,host:pid,t:Date.now()});pub('p/'+pid,{name,t:Date.now()});pub('round',{r:1});
-  PENDING_NAME='';location.hash='room='+room;
+  PENDING_NAME='';nav('room='+room);
 }
 
 route();syncMusicBtn();

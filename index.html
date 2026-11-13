@@ -428,6 +428,19 @@ body.board-open .boardtab,body.board-open .nbbtn,body.board-open .musicbtn{displ
 @media (pointer:coarse){.btool .zbtn{display:none}.mapzoom button:not(.zr){display:none}}
 .pinchhint{font:600 11px Inter,sans-serif;color:#9a927e;margin-right:auto}
 .modal.still,.modal.still .paper{animation:none!important}
+@keyframes wxfall{from{transform:translate(0,0)}to{transform:translate(var(--dx),600px)}}
+.mapsvg .wxl{animation:wxfall var(--d) linear infinite}
+@keyframes wxflash{0%,88%,92%,100%{opacity:0}89%{opacity:.55}90.5%{opacity:.1}91%{opacity:.4}}
+.mapsvg .wxflash{opacity:0;animation:wxflash 7s infinite}
+@keyframes wxdrift{from{transform:translateX(-60px)}to{transform:translateX(60px)}}
+.mapsvg .wxfog{animation:wxdrift 18s ease-in-out infinite alternate}
+.mapsvg .wxcloud{animation:wxdrift 26s ease-in-out infinite alternate}
+@keyframes wxsun{from{transform:translate(0,0)}to{transform:translate(-90px,30px)}}
+.mapsvg .wxsun{animation:wxsun 30s ease-in-out infinite alternate}
+@keyframes pflash{0%,45%{opacity:1}50%,95%{opacity:.08}100%{opacity:1}}
+.mapsvg .pbar.pr,.mapsvg .pglow.pr{animation:pflash .9s infinite}
+.mapsvg .pbar.pb,.mapsvg .pglow.pb{animation:pflash .9s infinite;animation-delay:-.45s}
+@media (prefers-reduced-motion:reduce){.mapsvg .wxl,.mapsvg .wxfog,.mapsvg .wxcloud,.mapsvg .wxsun,.mapsvg .pbar,.mapsvg .pglow,.mapsvg .wxflash{animation:none}}
 .rsn{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
 .rchip{background:#f4ecd8;border:1px solid #b8a888;color:#2a2418;border-radius:14px;padding:6px 10px;font:600 12px Inter,sans-serif;text-align:left;cursor:pointer;line-height:1.3}
 .rchip.on{background:#7a1a1e;border-color:#7a1a1e;color:#fff}
@@ -628,6 +641,7 @@ const PERS={
  weary:{brow:'sad',mouth:'flat',open:["Long night. ","Alright. "],close:[" I'd like to sleep now, if that's allowed.",""],talk:["I've worked in houses like this for years. Something always goes wrong eventually.","I'm too tired to lie to you, Detective.","{V} was difficult. That's not a crime. Neither is being tired."]},
  smug:{brow:'arch',mouth:'smirk',open:["Ah, the detective. ","Well, well. "],close:[" You're welcome.",""],talk:["I could tell you who did it, but where's the fun in that?","You're asking the wrong questions. I'll wait.","I always know more than people think I do."]}};
 const PERS_KEYS=Object.keys(PERS);
+const NUMW=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
 const TIC_START=['Frankly, ','For the record, ','Honestly, ','Look, ','Listen, ','Between us, ','With respect, ','Let\'s be clear: ','Believe me, ','Mark my words, ','Truth is, ','Here\'s the thing: ','God\'s honest truth, ','Plain and simple: '];
 const TIC_END=[', darling.',', old sport.',', sweetheart.',', my friend.',', Detective.',', alright?',', capisce?',', okay?',', dear.',', chief.',', you understand?',', I promise you.'];
 const ITEMS_SIG=['an engraved silver lighter','a gold pocket watch','a monogrammed fountain pen','a pair of pearl cufflinks','a jade hairpin','a silver hip flask','a tortoiseshell cigarette case','an emerald brooch','a pair of reading glasses on a chain','a lucky poker chip','a rosary of black beads','a brass compass','a silk handkerchief with initials','a vintage wristwatch','a cameo locket','a signet ring'];
@@ -835,6 +849,34 @@ function caseHeaderRaw(code){
   return{code,genre,A,vSur,vg,vFirst,loc,title,structure,number:num};
 }
 
+/* ---------- evidence: different names, order and extra (harmless) finds every case ---------- */
+function varyEvidence(lab,code,o){
+  const r=mkR(hashStr('EVID|'+code)),V=o.V,out=lab.map(e=>Object.assign({},e));
+  const ren={"Coroner's Report":["Coroner's Report","Autopsy Summary","Medical Examiner's Notes","Pathologist's Report","Post-Mortem Findings"],
+    'Lab Note':['Lab Note','Crime Lab Memo','Forensics Update','Lab Results'],'Forensics':['Forensics','Forensic Sweep','Scene Analysis','Crime Scene Unit']};
+  out.forEach(e=>{if(ren[e.t])e.t=r.pick(ren[e.t])});
+  const rooms=o.ROOMS.filter(x=>!/^hall/.test(x.type)&&x.id!==o.MR.id&&x.id!==o.BR.id),rm=()=>r.pick(rooms).label;
+  const pool=[
+    ()=>({t:'Shoe Prints',x:(o.env.rain?'Wet':'Dusty')+' shoe prints in the '+rm()+'. Size and tread are common — half the guests could have made them. Too smudged to match.'}),
+    ()=>({t:'Wine Glasses',x:'A dozen glasses were collected around the building. Prints on all of them — everyone was drinking and passing them around. Useless.'}),
+    ()=>({t:'Torn Fabric',x:'A thread of dark wool caught on a door frame in the '+rm()+'. Could be from a coat, a scarf, a sweater. Could be from last week.'}),
+    ()=>({t:'Cigarette Ends',x:'Three cigarette ends in an ashtray in the '+rm()+'. Two different brands. Several guests smoke.'}),
+    ()=>({t:V+'\'s Diary',x:'The last page says: "Tonight I finally say it out loud." Nothing about to whom, or what.'}),
+    ()=>({t:'Bank Statement',x:V+' moved a large sum of money last month. The bank won\'t say where without a court order.'}),
+    ()=>({t:'Hair Sample',x:'Hairs on '+V+'\'s jacket. Several people hugged or bumped into '+V+' tonight — the lab says it proves nothing on its own.'}),
+    ()=>({t:'Broken Watch',x:V+'\'s wristwatch is cracked and stopped. Don\'t trust it — the lab says the crack is old and the battery was already dying.'}),
+    ()=>({t:'Text Messages',x:'A deleted message on '+V+'\'s phone, recovered by the lab: "we need to talk. not here." The sender used a prepaid number.'}),
+    ()=>({t:'Guest List',x:'The official guest list. Everyone questioned is on it. Nobody else signed in — though not everybody bothered signing.'}),
+    ()=>({t:'Medicine Cabinet',x:'Sleeping pills, painkillers and allergy tablets in the '+rm()+'. Nothing missing, as far as anyone can tell.'}),
+    ()=>({t:'Lipstick Mark',x:'A lipstick mark on a coffee cup in the '+rm()+'. The shade is a popular one. The cup was washed before anyone thought to check.'}),
+    ()=>({t:'Car Keys',x:'A set of car keys under a cushion in the '+rm()+'. Nobody remembers losing them. Doesn\'t match the cars outside.'}),
+    ()=>({t:'Phone Charger',x:'A phone charger unplugged and left hanging in the '+rm()+'. Small thing. Probably nothing.'}),
+    ()=>({t:'Weather Report',x:'The weather service logged '+(o.env.weather||'a quiet night')+' over the area all evening'+(o.env.rain?', with the heaviest rain around '+fmt(o.T-30)+'.':'.')}),
+    ()=>({t:'Muddy Towel',x:'A muddy towel in the laundry basket. The staff say towels get muddy every night — guests walk the grounds.'}),
+  ];
+  const n=r.int(0,3);r.shuffle(pool).slice(0,n).forEach(f=>out.push(f()));
+  const first=out.shift();return [first].concat(r.shuffle(out));
+}
 /* ---------- the full case ---------- */
 function generateCase(code){
   const H=caseHeader(code),r=mkR(hashStr('TLN8|'+code));
@@ -886,10 +928,14 @@ function generateCase(code){
   const nm=g=>{let n;do{n=r.pick(g==='m'?MALE:FEMALE)}while(usedF.has(n));usedF.add(n);return n};
   const ln=()=>{let n;do{n=r.pick(LAST)}while(usedL.has(n));usedL.add(n);return n};
   const fam=r.pick(['sibling','child','niece']);
-  const pros=r.shuffle(['partner','secretary','lawyer','doctor','accountant','friend','rival','biographer','bodyguard','chef']).slice(0,3);
+  // how many people were there: 4 to 8, different every case (own seed so it never shifts the rest)
+  const nsr=mkR(hashStr('NSUS|'+code));let NS=[4,5,5,6,6,6,7,7,8][Math.floor(nsr.next()*9)];
+  NS=Math.max(NS,{conspiracy:6,mastermind:5,duo:5,frame:5,puppet:5}[structure]||4);
+  const pros=r.shuffle(['partner','secretary','lawyer','doctor','accountant','friend','rival','biographer','bodyguard','chef']).slice(0,NS-3);
   const keys=r.shuffle(['spouse',fam].concat(pros,['staff']));
-  const pers=r.shuffle(PERS_KEYS).slice(0,6),tics=r.shuffle(TIC_START.map(t=>({s:t})).concat(TIC_END.map(t=>({e:t})))).slice(0,6);
-  const sig=r.shuffle(ITEMS_SIG).slice(0,6),quirks=r.shuffle(QUIRKS).slice(0,6);
+  const pers=r.shuffle(PERS_KEYS),tics=r.shuffle(TIC_START.map(t=>({s:t})).concat(TIC_END.map(t=>({e:t})))).slice(0,NS);
+  while(pers.length<NS)pers.push(pers[pers.length%PERS_KEYS.length]);
+  const sig=r.shuffle(ITEMS_SIG).slice(0,NS),quirks=r.shuffle(QUIRKS).slice(0,NS);
   const sus=keys.map((k,i)=>{const ro=ROLES[k],g=k==='spouse'?(vg==='m'?'f':'m'):r.pick(['m','f']),p=PR[g];
     const first=nm(g),last=(k==='spouse'||k==='sibling'||k==='child')?vSur:ln(),pm={he:p.he,him:p.him,his:p.his,He:p.He,n:r.int(4,30),m:r.int(1,3)};
     return{key:k,g,p,first,last,name:first+' '+last,role:k==='staff'?A.staff[g]:ro.label[g],pers:pers[i],tic:tics[i],sig:sig[i],
@@ -906,13 +952,13 @@ function generateCase(code){
   const talk=i=>F(r.pick(PERS[sus[i].pers].talk));
 
   // ---- culprits ----
-  const all=[0,1,2,3,4,5];
+  const all=sus.map((s,i)=>i),NL=NS-1;
   let culprits=[],X=-1,M=-1,Fr=-1,K2=-1,K3=-1;
   const pickNot=(ex,pred)=>r.pick(all.filter(i=>!ex.includes(i)&&(!pred||pred(i))));
-  if(structure==='single'||structure==='frame'){X=r.int(0,5);culprits=[X]}
-  if(structure==='puppet'){X=r.int(0,5);M=pickNot([X]);culprits=[X,M]}
+  if(structure==='single'||structure==='frame'){X=r.int(0,NL);culprits=[X]}
+  if(structure==='puppet'){X=r.int(0,NL);M=pickNot([X]);culprits=[X,M]}
   if(structure==='duo'){X=pickNot([]);K2=pickNot([X]);culprits=[X,K2]}
-  if(structure==='conspiracy'){X=r.int(0,5);K2=pickNot([X]);K3=pickNot([X,K2]);culprits=[X,K2,K3]}
+  if(structure==='conspiracy'){X=r.int(0,NL);K2=pickNot([X]);K3=pickNot([X,K2]);culprits=[X,K2,K3]}
   if(structure==='mastermind'){M=timed?pickNot([]):pickNot([],i=>KEYHOLDER.has(sus[i].key));culprits=[M]}
   const isC=i=>culprits.includes(i);
   const innocents=all.filter(i=>!isC(i));
@@ -1089,7 +1135,7 @@ function generateCase(code){
   sus.forEach(s=>s.rels.unshift(F(relRoles[s.key],{n:r.int(5,30),nn:s.g==='m'?'nephew':'niece'})));
   if(structure==='duo'||structure==='conspiracy')culprits.forEach(i=>{const o=culprits.find(j=>j!==i);sus[i].rels.push('Says '+sus[i].p.he+' barely knows '+sus[o].first+'.')});
   const relPool=r.shuffle(REL_PAIRS);let rp=0;
-  for(let n=0;n<2;n++){const a=r.int(0,5),b=r.int(0,5);if(a===b||(isC(a)&&isC(b)&&(structure==='duo'||structure==='conspiracy')))continue;const pr=relPool[rp++];sus[a].rels.push(fill(pr[0],{X:sus[b].first,his:sus[a].p.his}));sus[b].rels.push(fill(pr[1],{X:sus[a].first,his:sus[b].p.his}))}
+  for(let n=0;n<2;n++){const a=r.int(0,NL),b=r.int(0,NL);if(a===b||(isC(a)&&isC(b)&&(structure==='duo'||structure==='conspiracy')))continue;const pr=relPool[rp++];sus[a].rels.push(fill(pr[0],{X:sus[b].first,his:sus[a].p.his}));sus[b].rels.push(fill(pr[1],{X:sus[a].first,his:sus[b].p.his}))}
 
   // ---- clues: lab + rooms ----
   const rooms={};ROOMS.forEach(x=>rooms[x.id]=null);
@@ -1151,7 +1197,7 @@ function generateCase(code){
   ROOMS.forEach(x=>{if(!rooms[x.id])rooms[x.id]=OUTSIDE_T.has(x.type)?r.pick(OUT):r.chance(.2)?r.pick(redh):r.pick(NOTHING)});
 
   // ---- away suspects ----
-  const awayN=r.chance(.35)?r.int(1,2):0;
+  const awayN=r.chance(.35)?Math.min(r.int(1,2),NS<=4?1:2):0;
   r.shuffle(all.filter(i=>i!==finder&&i!==Q&&i!==W)).slice(0,awayN).forEach(i=>{const s=sus[i];s.away={place:r.pick(AWAY_PLACES).replace('their',s.p.his).replace('they',s.p.he),mins:5*r.int(2,9),detail:fill(r.pick(AWAY_DETAILS),{He:s.p.He,he:s.p.he,his:s.p.his})}});
 
   // ---- solution ----
@@ -1196,12 +1242,12 @@ function generateCase(code){
   sus.forEach(s=>{let LK,k=0;do{LK=makeLook(lr,s);k++}while(usedSig.has(LK.sig)&&k<40);usedSig.add(LK.sig);s.look=LK});
 
   const WXP={'heavy rain':'a night of heavy rain','a thunderstorm':'a stormy night, thunder rolling in','thick fog':'a night of thick fog','a clear, cold night':'a clear, cold night','a humid, sticky heat':'a hot, sticky night','a light drizzle':'a night of light drizzle','a clear night':'a clear night','a snowstorm':'a night of heavy snow','a freezing, clear night':'a freezing, clear night'};
-  const intro='It was '+(WXP[env.weather]||env.weather)+' '+loc.at+'. '+cap(F(r.pick(["{V}'s birthday dinner had just wrapped up","the family had gathered to hear about {V}'s new will","guests had come over for a private party","a weekend get-together had slowly turned tense","a huge deal was supposed to be signed the next morning","{V} had called everyone together for an announcement nobody heard","an anniversary party was winding down"])))+'. At '+fmt(T+15)+', '+V+' '+vSur+', '+vDesc+', was found dead in the '+BR.label+'. Six people were there that night. '+(G.intro?F(G.intro)+' ':'')+(forensic==='clean'?'The forensic team is already grumbling — this scene is unusually clean. ':'')+'All six have been questioned'+(awayN?' — but '+(awayN===1?'one of them':'two of them')+' left before the cops showed up. You\'ll have to track them down.':'.');
+  const intro='It was '+(WXP[env.weather]||env.weather)+' '+loc.at+'. '+cap(F(r.pick(["{V}'s birthday dinner had just wrapped up","the family had gathered to hear about {V}'s new will","guests had come over for a private party","a weekend get-together had slowly turned tense","a huge deal was supposed to be signed the next morning","{V} had called everyone together for an announcement nobody heard","an anniversary party was winding down"])))+'. At '+fmt(T+15)+', '+V+' '+vSur+', '+vDesc+', was found dead in the '+BR.label+'. '+cap(NUMW[NS])+' people were there that night. '+(G.intro?F(G.intro)+' ':'')+(forensic==='clean'?'The forensic team is already grumbling — this scene is unusually clean. ':'')+'All '+NUMW[NS]+' have been questioned'+(awayN?' — but '+(awayN===1?'one of them':'two of them')+' left before the cops showed up. You\'ll have to track them down.':'.');
   return{code,genre,structure,forensic,number:H.number,title:H.title,place:loc.name,at:loc.at,arch:A.key,archKind:A.kind,theme,layout:L,rooms:Object.fromEntries(ROOMS.map(x=>[x.id,x])),
     victim:{name:vFirst+' '+vSur,first:V,desc:vDesc,g:vg},cause:cause.label,method:cause.key,tod:fmt(T),T,todA,todB,murderRoom:murderId,bodyRoom:bodyId,moved,env,
     scene:'the '+BR.label+(BR.floor==='U'?', upstairs':BR.floor==='B'?', in the basement':OUTSIDE_T.has(BR.type)&&!/outside|street|plaza|garden|woods|yard|grounds|vineyard/i.test(BR.label)?', outside':''),intro,inspector:r.pick(G.inspector),
     suspects:sus.map((s,i)=>({name:s.name,first:s.first,role:s.role,g:s.g,key:s.key,statement:s.statement,alibi:s.alibi,motive:s.motive,background:s.background,rels:s.rels,followup:s.followup,clear:clear[i]||'',away:s.away||null,claim:s.claim,look:s.look,pers:s.pers})),
-    evidence:lab,roomClues:rooms,sightings,facts,lockedRoom,culprits,killer:culprits.length?culprits[0]:-1,outsider:structure==='outsider',proof,story,structLabel:STRUCT_LABEL[structure],_lie:lie};
+    evidence:varyEvidence(lab,code,{V,env,T,ROOMS,MR,BR,A,theme}),roomClues:rooms,sightings,facts,lockedRoom,culprits,killer:culprits.length?culprits[0]:-1,outsider:structure==='outsider',proof,story,structLabel:STRUCT_LABEL[structure],_lie:lie};
 }
 
 /* ---------- portrait features (vintage sepia illustration) ---------- */
@@ -1462,7 +1508,7 @@ function makeNews(C,PG){
   const place=C.place.replace(/^The /,'');
   const names=listNames(cul.map(s=>s.name));
   let hl,sh,body=[];
-  body.push(C.victim.name+', '+C.victim.desc+', was found dead in '+C.scene.replace(/,.*$/,'')+' '+C.at+'. Time of death: around '+C.tod+'. Cause of death: '+C.cause.toLowerCase()+'. Six people were inside that night — and every one of them had a story.');
+  body.push(C.victim.name+', '+C.victim.desc+', was found dead in '+C.scene.replace(/,.*$/,'')+' '+C.at+'. Time of death: around '+C.tod+'. Cause of death: '+C.cause.toLowerCase()+'. '+cap(NUMW[C.suspects.length])+' people were inside that night — and every one of them had a story.');
   if(cul.length){
     const what={single:'',duo:' Police say the two planned it together.',conspiracy:' Police describe a "small, quiet conspiracy."',puppet:' Investigators say one of them was pushed into it by the other.',frame:' The killer tried to frame an innocent guest.',mastermind:' Police believe the killer never touched the victim.'}[C.structure]||'';
     if(lead){
@@ -1478,7 +1524,7 @@ function makeNews(C,PG){
     }
     body.push('"'+cul[0].followup+'" '+cul[0].first+' told investigators — a lie that almost worked.');
   }else{
-    if(lead){hl=place+' Killer Still Out There — All Six Suspects Cleared';sh='Detective '+lead.name+' refused to blame an innocent person.';body.push('Detective '+lead.name+' checked every alibi and found that all six were telling the truth. The killer came from outside and was never found.')}
+    if(lead){hl=place+' Killer Still Out There — All '+cap(NUMW[C.suspects.length])+' Suspects Cleared';sh='Detective '+lead.name+' refused to blame an innocent person.';body.push('Detective '+lead.name+' checked every alibi and found that all six were telling the truth. The killer came from outside and was never found.')}
     else{hl='Innocent Suspects Blamed — Real '+place+' Killer Still at Large';sh='The case stays open.';body.push('The crew accused people whose alibis were rock solid. The real killer, an intruder, has never been found.')}
   }
   body.push(lead?'"Solid work. First round\'s on me," the Chief Inspector said.':'"We\'ll talk about this on Monday," the Chief Inspector said.');
@@ -1582,7 +1628,7 @@ function home(){
   const board=Object.entries(lsGet('tln:board',{})).sort((a,b)=>b[1].pts-a[1].pts).slice(0,10);
   app.innerHTML=`<div class="wrap fadein">
   <header class="hero"><div class="eyebrow">Detective Case Files</div><h1 class="brand">THE LAST NIGHT</h1>
-  <p class="tag">One murder. Six suspects. Six convincing liars. Crack it with your crew.</p></header>
+  <p class="tag">One murder. A house full of suspects. Every one of them a convincing liar. Crack it with your crew.</p></header>
   ${(()=>{const cl=continueList();return `<div class="panel contp"><h3>💾 Continue</h3>${cl.length?cl.map(x=>`<button class="libitem" onclick="${x.act}"><span class="libno">${esc(x.label)}</span><span class="libt"><b>${esc(x.title)}</b><small>${new Date(x.t).toLocaleString()}</small></span><span class="libst">▶</span></button>`).join(''):'<p>No saved games yet. Your progress saves automatically.</p>'}<label class="btn ghost sm" style="margin-top:10px;display:inline-block">⬆️ Load a save file<input type="file" accept=".json,application/json" style="display:none" onchange="importSave(this.files[0])"></label></div>`})()}
   <div class="panel joinbig"><h3>🌐 Join your crew's game</h3><p>Got a room code from a friend? Type it here and you're in.</p>
    <div class="row"><input id="roomIn" maxlength="5" placeholder="ROOM CODE" onkeydown="if(event.key==='Enter')joinRoom()"><button class="btn brass" onclick="joinRoom()">Join</button></div></div>
@@ -1707,8 +1753,7 @@ function fileTab(){
     <li><span>Cause of death</span><span>${esc(C.cause)}</span></li>
     <li><span>Est. time of death</span><span>${esc(C.tod)}</span></li>
     <li><span>Body found</span><span>${esc(cap(C.scene))}</span></li><li><span>Building</span><span>${esc(C.archKind)}</span></li><li><span>Weather</span><span>${esc(cap((C.env&&C.env.weather||'').replace(/^an? /,'')))}</span></li>
-    <li><span>Number of suspects</span><span>6${away?` (${away} not at the scene)`:''}</span></li>
-    <li><span>Confirmed murderer</span><span>${C.genre==='unsolvable'?'Unknown':'1'}</span></li></ul>
+    <li><span>Number of suspects</span><span>${C.suspects.length}${away?` (${away} not at the scene)`:''}</span></li></ul>
    <div class="chief"><b>CHIEF INSPECTOR</b><p class="type">"${esc(C.inspector)}"</p></div>
    ${crew}
    <div class="sharebox"><small>${online()?'Room code — late friends can still watch':'Share this code with your crew'}</small><div class="big">${online()?ROOMCODE:CODE}</div>
@@ -1872,13 +1917,14 @@ function accuseTab(){
   if(!host()&&!online())return `<div class="paper locked"><div class="ic">⚖️</div><h2>Who did it?</h2><p class="type">You're just reading, so there's no scoring. Made up your mind? Peek at the answer.</p>
     <button class="btn red" onclick="confirmBox('Show the answer?','No take-backs — the mystery\\'s over once you look.','Show me',()=>{PG.revealed=true;savePG();renderCase()})">Show me the answer</button></div>`;
   const n=PG.players.length,locked=PG.players.filter(p=>p.acc!=null).length,me=meIdx();
-  const chips=PG.players.map((p,i)=>{const mine=online()&&i===me, clickable=host()&&p.acc==null;
-    return `<button class="voter ${p.acc!=null?'done':''} ${mine?'me':''}" ${clickable?`onclick="accuse(${i})"`:'disabled'}>${p.acc!=null?'🔒 '+esc(p.name)+' · Stage '+p.accRound:'⚖️ '+esc(p.name)}${mine?' (you)':''}</button>`}).join('');
-  const myBtn=online()&&me>=0&&PG.players[me].acc==null?`<button class="btn red" onclick="accuse(${me})">⚖️ Lock in my accusation</button>`:'';
+  const chips=PG.players.map((p,i)=>{const mine=online()&&i===me, clickable=false;
+    return `<button class="voter ${p.acc!=null?'done':''} ${mine?'me':''}" disabled>${p.acc!=null?'🔒 '+esc(p.name)+' · Stage '+p.accRound:'⚖️ '+esc(p.name)}${mine?' (you)':''}</button>`}).join('');
+  const myBtn='';
   const canReveal=(host()||me>=0)&&n&&locked===n;
   return `<div class="paper"><div class="cf">FINAL ACCUSATIONS</div><h2>Who's responsible for ${esc(C.victim.first)}'s death?</h2>
    <p class="type small">It might be one killer. It might be two working together, a group, someone pulling the strings, or nobody in the room at all. Pick <b>everyone</b> you think was involved.<br>Exact group = full points (right now <b>${PTS[PG.round]}</b>). Some right and no innocents = half. Blame an innocent = zero.</p>
-   <div class="row wrapr"><button class="btn red" onclick="openBook(0)">📖 File the arrest in the case book</button><button class="btn ghost" onclick="openNotebook()">📒 Review your notebook (${PG.notesList.length})</button></div>
+   <p class="type small"><b>How to accuse:</b> open the case book, choose your suspect on the arrest form, tap your reasons, then sign it.</p>
+   <div class="row wrapr"><button class="btn red" onclick="openBook(1)">📖 File the arrest in the case book</button><button class="btn ghost" onclick="openNotebook()">📒 Review your notebook (${PG.notesList.length})</button></div>
    <div class="voters" style="margin-top:14px">${chips}</div>
    <p class="hint">${locked} of ${n} locked in</p>${myBtn}
    ${online()&&me<0?'<p class="hint">You\'re watching — the reveal will play here when the crew is done.</p>':''}
@@ -1926,7 +1972,7 @@ function reasonOptions(sel,none){
   return o;
 }
 function reasonPicker(sel,none,picked,attr){
-  if(!sel.length&&!none)return `<div class="lab">Why? <small>Pick who first, then your reasons</small></div>`;
+  if(!sel.length&&!none)return '';
   const opts=reasonOptions(sel,none);
   return `<div class="lab">Why? <small>Tap at least 1 reason (up to 4) — based on what you found</small></div><div class="rsn">${opts.map(r=>`<button class="rchip ${picked.includes(r.id)?'on':''}" ${attr}="${esc(r.id)}">${picked.includes(r.id)?'✔ ':''}${esc(r.txt)}</button>`).join('')}</div>`;
 }
@@ -1949,7 +1995,7 @@ function revealView(){
    ${rows?`<h3>The crew's verdicts</h3>${rows}`:''}
    <h3>How it went down</h3><p class="story">${esc(C.story)}</p>
    <h3>The proof</h3><ul>${C.proof.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
-   <h3>${cul.length?'Why the others are innocent':'Why all six are innocent'}</h3><ul>${C.suspects.map((s,i)=>C.culprits.includes(i)?'':`<li><b>${esc(s.name)}</b> — ${esc(s.clear)}</li>`).join('')}</ul></div>
+   <h3>${cul.length?'Why the others are innocent':'Why all '+NUMW[C.suspects.length]+' are innocent'}</h3><ul>${C.suspects.map((s,i)=>C.culprits.includes(i)?'':`<li><b>${esc(s.name)}</b> — ${esc(s.clear)}</li>`).join('')}</ul></div>
    ${news?`<div class="cf lbl" style="margin-top:22px">📰 IN THE NEWS</div>${newsHTML(news)}`:''}
    <div class="actions"><button class="btn ghost" onclick="openBook(0)">📖 Open the case book</button><button class="btn red" onclick="go(nextCaseCode())">Next case</button>
     ${online()?`<button class="btn ghost" onclick="go('${CODE}')">Leave room</button>`:`<button class="btn ghost" onclick="resetCase()">Replay this case</button>`}</div>`;
@@ -2107,7 +2153,7 @@ function searchRoom(k){PG.searched=PG.searched||{};PG.searched[k]=true;savePG();
 /* =====================================================================
    ILLUSTRATED CRIME SCENE MAP — drawn from each case's own floor plan
    ===================================================================== */
-const CHIPC=['#e74c3c','#3498db','#f1c40f','#2ecc71','#9b59b6','#e67e22'];
+const CHIPC=['#e74c3c','#3498db','#f1c40f','#2ecc71','#9b59b6','#e67e22','#1abc9c','#e84393'];
 let MAP_FLOOR='G',MAP_T=null;
 function roomIds(){return Object.keys(C.rooms)}
 const MAPR={};// kept for old callers
@@ -2258,6 +2304,15 @@ function mapDefs(){
   <radialGradient id="mpFire"><stop offset="0" stop-color="#ff9a3a" stop-opacity=".7"/><stop offset="1" stop-color="#ff6a1a" stop-opacity="0"/></radialGradient>
   <radialGradient id="mpStreet"><stop offset="0" stop-color="#ffe6a8" stop-opacity=".5"/><stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/></radialGradient>
   <radialGradient id="mpVig" cx="50%" cy="42%" r="78%"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".62"/></radialGradient>
+  <pattern id="wxRain1" width="30" height="40" patternUnits="userSpaceOnUse"><path d="M6 0l-3 12M21 20l-3 12" stroke="rgba(190,215,255,.45)" stroke-width="1"/></pattern>
+  <pattern id="wxRain2" width="30" height="60" patternUnits="userSpaceOnUse"><path d="M12 8l-4 16M26 38l-4 16" stroke="rgba(190,215,255,.3)" stroke-width=".8"/></pattern>
+  <pattern id="wxSnow1" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1.6" fill="#fff" opacity=".9"/><circle cx="28" cy="26" r="1.2" fill="#fff" opacity=".8"/><circle cx="19" cy="36" r="1" fill="#fff" opacity=".7"/></pattern>
+  <pattern id="wxSnow2" width="60" height="60" patternUnits="userSpaceOnUse"><circle cx="14" cy="20" r="2.2" fill="#fff" opacity=".85"/><circle cx="42" cy="44" r="1.8" fill="#fff" opacity=".75"/></pattern>
+  <filter id="mpFog" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
+  <radialGradient id="gMoon"><stop offset="0" stop-color="#cfe0ff" stop-opacity=".45"/><stop offset=".5" stop-color="#9ab8ff" stop-opacity=".12"/><stop offset="1" stop-color="#9ab8ff" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gSun"><stop offset="0" stop-color="#ffd890" stop-opacity=".4"/><stop offset=".5" stop-color="#ffb060" stop-opacity=".12"/><stop offset="1" stop-color="#ffb060" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gPolR"><stop offset="0" stop-color="#ff2a1a" stop-opacity=".75"/><stop offset="1" stop-color="#ff2a1a" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gPolB"><stop offset="0" stop-color="#2a6aff" stop-opacity=".75"/><stop offset="1" stop-color="#2a6aff" stop-opacity="0"/></radialGradient>
   <clipPath id="tcB" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath></defs>`;
 }
 function treeD(x,y,r,theme,rr){const snow=theme==='snow',dk=theme==='forest'?'#0f2614':'#163a20',md=snow?'#2a4a3c':'#1f4e2a',lt=snow?'#eef3f6':'#2e6a38';let s=`<circle cx="${x+r*.3}" cy="${y+r*.35}" r="${r}" fill="rgba(0,0,0,.5)"/><circle cx="${x}" cy="${y}" r="${r}" fill="${dk}"/>`;
@@ -2272,7 +2327,7 @@ function outsideLayer(){
   if(theme==='city'){
     s+=R(0,y0+H+6,400,48,'url(#mpSide)')+R(0,y0+H+52,400,4,'#6a6c70')+`<path d="M0 ${y0+H+108}h400" stroke="#d8d8d0" stroke-width="2" stroke-dasharray="18 12" opacity=".8"/>`;
     s+=R(0,0,400,y0-56,'url(#mpSide)')+R(0,y0-58,400,3,'#6a6c70');
-    [[60,y0+H+82,90],[300,y0+H+130,90],[170,y0+H+150,-90]].forEach(([a,b,rot])=>{if(b<590)s+=g(a,b,rot,carD(1,rr.pick(['#1e1e22','#5a1a1e','#2a3a5a','#6a6a6a'])))});
+    [[60,y0+H+82,90],[300,y0+H+130,90],[170,y0+H+150,-90]].forEach(([a,b,rot])=>{if(b<590&&!policeSpots().some(([px,py])=>Math.hypot(px-a,py-b)<50))s+=g(a,b,rot,carD(1,rr.pick(['#1e1e22','#5a1a1e','#2a3a5a','#6a6a6a'])))});
     [[24,y0+H+24],[200,y0+H+24],[376,y0+H+24]].forEach(([a,b])=>s+=`<g ${SH}><circle cx="${a}" cy="${b}" r="3" fill="#c8a24a"/></g><circle cx="${a}" cy="${b}" r="40" fill="url(#mpStreet)" style="mix-blend-mode:screen"/>`);
     [[110,y0+H+30],[290,y0+H+30]].forEach(([a,b])=>s+=`<rect x="${a-8}" y="${b-8}" width="16" height="16" fill="#3a3a3e" stroke="#555"/>`+treeD(a,b,10,theme,rr));
   }else{
@@ -2283,10 +2338,38 @@ function outsideLayer(){
     if(theme==='vines')for(let k=0;k<6;k++)s+=`<path d="M20 ${y0+H+60+k*20}H${ent.x-30} M${ent.x+30} ${y0+H+60+k*20}H380" stroke="#2f5a1f" stroke-width="6" stroke-linecap="round"/>`+[...Array(14)].map((_,i)=>`<circle cx="${26+i*12}" cy="${y0+H+60+k*20}" r="1.6" fill="#4a1a4a"/>`).join('');
     s+=`<g ${SH}><rect x="${x0+W*.75}" y="${Math.min(570,y0+H+70)}" width="34" height="7" fill="#4a2e18"/><rect x="${x0+W*.75}" y="${Math.min(570,y0+H+70)+9}" width="34" height="3" fill="#3a2210"/></g>`;
     const spots=[[24,24],[64,18],[336,22],[378,34],[20,74],[380,84],[18,250],[384,250],[18,420],[382,420],[30,580],[370,582],[110,18],[296,16],[384,160],[16,340],[60,555],[340,555],[200,16],[160,24]];
-    const n=theme==='forest'?20:13;rr.shuffle(spots).slice(0,n).forEach(([a,b])=>{if(a>x0-24&&a<x0+W+24&&b>y0-64&&b<y0+H+24)return;if(Math.abs(a-ent.x)<40&&b>ent.y)return;s+=treeD(a+rr.int(-4,4),b+rr.int(-4,4),rr.int(13,21),theme,rr)});
+    const n=theme==='forest'?20:13;rr.shuffle(spots).slice(0,n).forEach(([a,b])=>{if(a>x0-24&&a<x0+W+24&&b>y0-64&&b<y0+H+24)return;if(policeSpots().some(([px,py])=>Math.hypot(px-a,py-b)<38))return;if(Math.abs(a-ent.x)<40&&b>ent.y)return;s+=treeD(a+rr.int(-4,4),b+rr.int(-4,4),rr.int(13,21),theme,rr)});
   }
   const svc=L.service;s+=R(svc.x<200?0:svc.x,svc.y-7,svc.x<200?svc.x:400-svc.x,14,theme==='city'?'url(#mpSide)':'url(#mpPave)');
   return `<g filter="url(#mpBlur)">${s}</g>`;
+}
+/* ---- police at the scene: two cruisers by the entrance, light bars flashing ---- */
+function policeSpots(){
+  const L=C.layout,[x0,y0,W,H]=L.foot,G0=L.floors.find(f=>f.id==='G'),ent=(G0.rooms.find(x=>x.entrance)||{entrance:{x:200,y:y0+H}}).entrance;
+  if(C.theme==='city'){const y=Math.min(586,y0+H+82);return[[Math.max(40,ent.x-58),y,90],[Math.min(360,ent.x+58),y,-90]]}
+  const y=Math.min(560,ent.y+92);if(y-ent.y<46){return[[Math.max(30,x0-26),y0+H-40,0],[Math.min(370,x0+W+26),y0+H-40,0]]}
+  return[[Math.max(30,ent.x-52),y,-14],[Math.min(370,ent.x+54),Math.min(570,y+18),10]]}
+function policeCar(){const k=1;const W=26,H=54;return `<g ${SH}><rect x="${-W/2}" y="${-H/2}" width="${W}" height="${H}" rx="9" fill="#f2f2f0" stroke="#000" stroke-width=".7"/>
+  <rect x="${-W/2}" y="${-H/2+18}" width="${W}" height="${H-34}" fill="#14161c"/><rect x="${-W/2+3}" y="${-H/2+11}" width="${W-6}" height="8" rx="2" fill="#1a2430"/><rect x="${-W/2+3}" y="${H/2-16}" width="${W-6}" height="6" rx="2" fill="#1a2430"/>
+  <text x="0" y="3" transform="rotate(90)" font-family="Inter" font-weight="900" font-size="5.2" fill="#f2f2f0" text-anchor="middle">POLICE</text>
+  <rect x="-10" y="${-H/2+20}" width="9.5" height="4" rx="1" fill="#e0201a" class="pbar pr"/><rect x=".5" y="${-H/2+20}" width="9.5" height="4" rx="1" fill="#1a5aff" class="pbar pb"/>
+  <path d="M${-W/2+2} ${-H/2+4}h4M${W/2-2} ${-H/2+4}h-4" stroke="#fff6c0" stroke-width="2"/></g>`}
+function policeLayer(glow,still){return policeSpots().map(([x,y,rot],i)=>glow?
+  `<g transform="translate(${x} ${y-14})" style="mix-blend-mode:screen" pointer-events="none"><circle r="70" fill="url(#gPolR)" class="${still?'':'pglow pr'}" ${still?'opacity=".35"':''}/><circle r="70" fill="url(#gPolB)" class="${still?'':'pglow pb'}" ${still?'opacity=".35"':''}/></g>`:
+  g(x,y,rot,policeCar())).join('')+(glow?'':`<path d="M${policeSpots()[0][0]+18} ${policeSpots()[0][1]-30} L${policeSpots()[1][0]-18} ${policeSpots()[1][1]-30}" stroke="#f2c81a" stroke-width="3" stroke-dasharray="9 5"/>`)}
+/* ---- weather that moves: rain, snow, fog, moonlight & clouds ---- */
+function weatherLayer(fid,still){
+  if(fid==='B')return '';const e=C.env||{},w=e.weather||'';let s='';
+  const loop=(cls,fill,dur,dx)=>`<g class="${still?'':'wxl'}" style="--d:${dur}s;--dx:${dx}px">${R(0,-600,400,1200,fill)}</g>`;
+  if(/snow/.test(w))s+=loop('',"url(#wxSnow1)",11,40)+loop('',"url(#wxSnow2)",7,-60);
+  else if(e.rain){const heavy=!/drizzle/.test(w);s+=loop('',"url(#wxRain1)",heavy?.9:1.5,-30)+(heavy?loop('',"url(#wxRain2)",1.3,-30):'');
+    if(e.thunder&&!still)s+=`<rect width="400" height="600" fill="#dfe8ff" class="wxflash" pointer-events="none"/>`}
+  if(/fog/.test(w))s+=`<g class="${still?'':'wxfog'}" opacity=".5">${[[60,140,140],[260,320,170],[120,480,150],[330,90,120]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.45}" fill="#c8d0d8" opacity=".35" filter="url(#mpFog)"/>`).join('')}</g>`;
+  if(!e.rain&&!/snow|fog/.test(w)){const warm=/heat|humid/.test(w);
+    s+=`<g style="mix-blend-mode:screen" class="${still?'':'wxsun'}"><circle cx="330" cy="70" r="150" fill="url(#${warm?'gSun':'gMoon'})"/></g>`+
+      `<g class="${still?'':'wxcloud'}" opacity=".5">${[[40,120,90],[230,300,120],[120,470,100]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.5}" fill="#000" filter="url(#mpFog)"/>`).join('')}</g>`}
+  else if(/snow/.test(w)&&!/storm/.test(w)){s+=`<g style="mix-blend-mode:screen" class="${still?'':'wxsun'}"><circle cx="330" cy="70" r="140" fill="url(#gMoon)"/></g>`}
+  return `<g pointer-events="none">${s}</g>`;
 }
 function roomToken(i,x,y,dim){
   const s=C.suspects[i];const av=avatarSVG(s).replace('<svg ',`<svg x="${x-11}" y="${y-11}" width="22" height="22" `);
@@ -2322,7 +2405,8 @@ function drawEstate(fid,t,opt){
   opt=opt||{};const L=C.layout,[x0,y0,W,H]=L.foot;
   const vb=opt.crop?opt.crop.join(' '):'0 0 400 600';
   let s=`<svg viewBox="${vb}" class="mapsvg" xmlns="http://www.w3.org/2000/svg" ${opt.crop?'preserveAspectRatio="xMidYMid slice"':''}>${mapDefs()}`;
-  s+=outsideLayer()+R(0,0,400,600,'rgba(4,8,20,.32)');
+  const still=!!opt.crop;
+  s+=outsideLayer()+policeLayer(false,still)+R(0,0,400,600,'rgba(4,8,20,.32)');
   const {f,rooms,extra}=floorRooms(fid);
   if(fid==='G'){const gr=C.rooms[L.grounds];s+=`<g class="mr" onclick="roomSheet('${gr.id}')"><rect x="${gr.x}" y="${gr.y}" width="${gr.w}" height="${gr.h}" fill="transparent"/></g>`;
     const tr=C.rooms[L.terrace],tk=tr.h/44,rr=mkR(hashStr(C.code+tr.id));
@@ -2350,7 +2434,7 @@ function drawEstate(fid,t,opt){
   // night, lamps, rain, outage, vignette
   s+=R(0,0,400,600,'rgba(6,10,30,.14)','pointer-events="none"')+`<g pointer-events="none" style="mix-blend-mode:screen">`;
   rooms.forEach(rm=>{if(!/^hall/.test(rm.type))s+=`<circle cx="${rm.x+rm.w*.5}" cy="${rm.y+rm.h*.45}" r="${Math.min(rm.w,rm.h)*.5}" fill="url(#mpGlow)" opacity=".75"/>`;else s+=`<circle cx="${rm.x+rm.w/2}" cy="${rm.y+rm.h/2}" r="${Math.min(rm.w,rm.h)*.8}" fill="url(#mpGlow)" opacity=".5"/>`});
-  s+=`</g>`;if(C.env&&C.env.rain&&fid==='G')s+=R(0,0,400,600,'url(#mpRain)','pointer-events="none"');
+  s+=`</g>`+policeLayer(true,still)+weatherLayer(fid,still);
   if(C.env&&C.env.outage&&t>=C.env.outage.a&&t<=C.env.outage.b)s+=R(0,0,400,600,'rgba(0,0,0,.55)','pointer-events="none"')+`<text x="200" y="40" class="upnote" fill="#ff6b5b">POWER OUT</text>`;
   s+=R(0,0,400,600,'url(#mpVig)','pointer-events="none"');
   if(opt.noTokens)return s+'</svg>';
@@ -2397,7 +2481,7 @@ function roomPhoto(id){const rm=C.rooms[id];if(!rm)return'';const fid=floorOfRoo
 /* =====================================================================
    DETECTIVE BOARD — corkboard with polaroids, evidence and red string
    ===================================================================== */
-const BW=1800,BH=1280;
+const BW=1800,BH=1480;
 let BMODE='move',BSEL=null,BDRAG=null;
 function boardState(){
   if(!PG.board)PG.board={pos:{},links:[],stickies:[],notes:[],zoom:window.innerWidth<700?0.55:0.8};
@@ -2435,8 +2519,8 @@ function defaultPos(id,idx){
   if(id==='v')return[cx-80,cy-140];
   if(id==='ph')return[cx+100,cy-110];
   if(id==='tl')return[24,24];
-  if(id[0]==='s'){const i=+id.slice(1),a=-Math.PI/2+i*Math.PI/3;return[cx+Math.cos(a)*520-75,cy+Math.sin(a)*330-120]}
-  if(id[0]==='e'){const k=+id.slice(1);return[40+(k%7)*208,BH-250+Math.floor(k/7)*30]}
+  if(id[0]==='s'){const i=+id.slice(1),a=-Math.PI/2+i*2*Math.PI/C.suspects.length;return[cx+Math.cos(a)*520-75,cy+Math.sin(a)*330-120]}
+  if(id[0]==='e'){const k=+id.slice(1);return[40+(k%7)*208+(Math.floor(k/7)%2)*100,1000+Math.floor(k/7)*210]}
   if(id.startsWith('r_')){const k=roomIds().indexOf(id.slice(2));return[BW-200,30+(k%7)*140]}
   if(id.startsWith('k_')){const k=idx%6;return[BW-560+k*120,30+(k%2)*40]}
   if(id.startsWith('n_')){const k=idx%5;return[30,380+k*130]}
@@ -2621,7 +2705,7 @@ function caseDate(){return new Date().toLocaleDateString('en-US',{month:'long',d
 function bkNews(){
   const paper=PAPERS[hashStr('N|'+C.code)%PAPERS.length],n=PG.revealed&&PG.news;
   const hl=n?n.hl:C.victim.name+' Found Dead at '+C.place.replace(/^The /,'');
-  const body=n?n.body:[C.intro,'Police say '+C.victim.first+' died between '+fmt(C.todA||C.T-5)+' and '+fmt(C.todB||C.T+5)+'. '+(C.env&&C.env.outage?'A power cut hit the building that night. ':'')+'Six people remain under suspicion.','"'+C.inspector+'" the Chief Inspector told reporters. (Cont. on p. 2)'];
+  const body=n?n.body:[C.intro,'Police say '+C.victim.first+' died between '+fmt(C.todA||C.T-5)+' and '+fmt(C.todB||C.T+5)+'. '+(C.env&&C.env.outage?'A power cut hit the building that night. ':'')+cap(NUMW[C.suspects.length])+' people remain under suspicion.','"'+C.inspector+'" the Chief Inspector told reporters. (Cont. on p. 2)'];
   return `<div class="np"><div class="npdate">${caseDate()}</div><div class="npmast">${esc(paper)}</div>
    <h2 class="nphl">${esc(hl)}</h2>
    <div class="npimg">${roomPhoto(C.bodyRoom)}<span>${esc(cap(C.scene))}</span></div>

@@ -299,6 +299,27 @@ mark{background:#f3d36b;color:inherit;padding:0 2px;border-radius:2px}
 .board{margin:0;padding-left:22px;color:var(--txt2)}
 .board li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dotted var(--edge)}
 .board li span:first-child{color:var(--txt);font-weight:700}
+
+/* ---- online ---- */
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:7px;vertical-align:middle}
+.dot.live{background:#3fbf5f;box-shadow:0 0 6px #3fbf5f}.dot.wait{background:#e0b030}.dot.off{background:#d04040}
+.joinbig{border-color:var(--brass);background:linear-gradient(180deg,#2a2419,#1c1915)}
+.joinbig input{text-transform:uppercase;letter-spacing:.3em;font-weight:800;font-size:20px;text-align:center}
+.roomcode{font-family:'Special Elite',monospace;font-size:clamp(46px,14vw,72px);letter-spacing:.25em;color:var(--red);text-align:center;margin:8px 0 4px}
+.lobby{text-align:center}.lobby .crew{text-align:left;max-width:380px;margin:0 auto 16px}
+.crew{margin:6px 0 10px}
+.crewrow{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;margin:6px 0;background:rgba(255,255,255,.45);border-radius:6px;font-weight:600}
+.crewrow i{font-weight:400;color:var(--muted)}
+.btn.sm{padding:6px 10px;font-size:12px}
+.voter.me{box-shadow:0 0 0 3px var(--brass)}
+.waiting{color:var(--muted)}
+.dots:after{content:'';animation:dots 1.4s infinite steps(4)}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+details.alt summary{cursor:pointer;font-size:15px;list-style:none}
+details.alt summary::-webkit-details-marker{display:none}
+details.alt summary:before{content:'▸ ';color:var(--muted)}details.alt[open] summary:before{content:'▾ '}
+details.alt[open] summary{margin-bottom:10px}
+.mode-online{box-shadow:0 0 0 2px var(--brass),0 14px 34px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -871,6 +892,7 @@ const app=document.getElementById('app');
 let C=null,CODE='',PG=null,TAB='file',FADE=false,HOME_GENRE='random',NOTE_FILTER='all',SEARCH_Q='';
 const MEM={};
 const PTS={1:300,2:200,3:100};
+let PGKEY='',ROOMCODE='',ROOM=null,REVEALING=false;
 const NOTE_CATS=[['evidence','🧪 Evidence'],['sus','🚩 Suspicious'],['alibi','✅ Alibi check'],['time','🕒 Timeline'],['theory','💡 Theory'],['other','📌 Other']];
 const catLabel=k=>(NOTE_CATS.find(c=>c[0]===k)||NOTE_CATS[5])[1];
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -879,8 +901,8 @@ function lsGet(k,d){try{const v=localStorage.getItem(k);if(v!=null)return JSON.p
 function lsSet(k,v){MEM[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function newCode(genre){const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';for(let n=0;n<500;n++){let s='';for(let i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];if(!genre||genre==='random'||genreOf(s)===genre)return s}return 'TROPA'}
 function defPG(){return{v:3,mode:null,players:[],votes:{},round:1,marks:{},notesList:[],revealed:false,tab:'file',visited:{},news:null,scored:false}}
-function loadPG(c){const p=lsGet('tln3:'+c,null);return p?Object.assign(defPG(),p):defPG()}
-function savePG(){PG.tab=TAB;lsSet('tln3:'+CODE,PG)}
+function loadPG(key){const p=lsGet(key,null);return p?Object.assign(defPG(),p):defPG()}
+function savePG(){PG.tab=TAB;lsSet(PGKEY,PG)}
 function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
 function openModal(inner,wide){
   closeModal();
@@ -896,10 +918,11 @@ function confirmBox(title,text,ok,cb){
 }
 function setGenreTheme(g){document.body.className=g?'g-'+g:''}
 function host(){return PG.mode==='host'}
-
 function route(){
-  const m=location.hash.match(/case=([^&]+)/);
+  const h=location.hash, m=h.match(/case=([^&]+)/), rm=h.match(/room=([^&]+)/);
   closeModal();
+  if(rm){openRoom(decodeURIComponent(rm[1]));window.scrollTo(0,0);return}
+  netLeave();
   if(m)openCase(decodeURIComponent(m[1]));else home();
   window.scrollTo(0,0);
 }
@@ -917,15 +940,17 @@ function home(){
   app.innerHTML=`<div class="wrap fadein">
   <header class="hero"><div class="eyebrow">Detective Case Files</div><h1 class="brand">THE LAST NIGHT</h1>
   <p class="tag">One murder. Six suspects. Six convincing liars. Crack it with your crew.</p></header>
-  <div class="paper"><div class="stamp">CONFIDENTIAL</div>
+  <div class="panel joinbig"><h3>🌐 Join your crew's game</h3><p>Got a room code from a friend? Type it here and you're in.</p>
+   <div class="row"><input id="roomIn" maxlength="5" placeholder="ROOM CODE" onkeydown="if(event.key==='Enter')joinRoom()"><button class="btn brass" onclick="joinRoom()">Join</button></div></div>
+  <div class="paper" style="margin-top:16px"><div class="stamp">CONFIDENTIAL</div>
    <div class="cf">CASE FILE #001</div><h2>The Blackwood Mansion Murder</h2>
    <p class="type">Adrian Blackwood got shot in his private office at 10:30 PM. Six people were inside the mansion. Everyone has an alibi.</p>
    <button class="btn red" onclick="go('BLACKWOOD')">Open Case #001</button></div>
   <div class="grid2">
-   <div class="panel"><h3>🎲 Generate a new case</h3><p>Pick a vibe, get a brand-new murder. Share the code so your crew gets the exact same case.</p>
+   <div class="panel"><h3>🎲 Generate a new case</h3><p>Pick a vibe, get a brand-new murder. Then open an online room for your crew.</p>
     <div class="chips">${[['random','🎲 Random']].concat(GENRE_KEYS.map(g=>[g,GENRES[g].icon+' '+GENRES[g].label])).map(([g,l])=>`<button class="chip ${HOME_GENRE===g?'on':''}" data-g="${g}" onclick="pickGenre('${g}')">${l}</button>`).join('')}</div>
     <button class="btn brass block" onclick="go(newCode(HOME_GENRE))">Generate New Case</button></div>
-   <div class="panel"><h3>🔑 Join with a case code</h3><p>Got a code from a friend? Type it here. Any word works too — try your crew's name.</p>
+   <div class="panel"><h3>🔑 Open a case by case code</h3><p>Want to replay a case you've seen before? Type its case code. Any word works too.</p>
     <div class="row"><input id="codeIn" maxlength="16" placeholder="e.g. K7QM2X" onkeydown="if(event.key==='Enter')joinCode()"><button class="btn" onclick="joinCode()">Open</button></div></div>
   </div>
   <div class="grid2">
@@ -935,21 +960,20 @@ function home(){
     ${board.length?`<ol class="board">${board.map(([n,b],i)=>`<li><span>${i===0?'👑 ':''}${esc(n)}</span><span>${b.pts} pts · ${b.solved}/${b.played} solved</span></li>`).join('')}</ol>`:'<div class="empty">No scores yet.</div>'}</div>
   </div>
   <div class="panel how" style="margin-top:14px"><h3>How to play with your crew</h3><ol>
-   <li><b>The host</b> opens a case, types in everyone's names, and shares the <b>case code</b>.</li>
-   <li><b>Everyone else</b> opens the same code on their own phone and taps <b>"Just following along"</b> to read the case.</li>
-   <li>Read the statements. Tap a <b>suspect's photo</b> for their full profile. Save anything interesting to <b>Notes</b>.</li>
-   <li>Don't know a word? Use <b>Search</b> — it checks the case files and the detective database.</li>
-   <li>Before each new stage, <b>every player votes</b> on the host's phone (pass it around — votes are secret).</li>
-   <li>Lock in your accusation on the host's phone any time. Earlier = more points: 300 / 200 / 100.</li>
-   <li>When everyone's locked in, reveal together. Whoever solved it makes the news.</li></ol></div>
+   <li><b>The host</b> opens a case and taps <b>Play online</b>. You get a 5-letter <b>room code</b>.</li>
+   <li><b>Everyone else</b> types the room code above (or opens the invite link) and enters their name.</li>
+   <li>When everyone's in the lobby, the host hits <b>Start</b>. Everyone plays on their own phone.</li>
+   <li>Read the statements, tap a <b>suspect's photo</b> for their profile, save stuff to <b>Notes</b>, look things up in <b>Search</b>.</li>
+   <li>Before each new stage, <b>every player votes</b> on their own phone. Votes stay secret until everyone's in.</li>
+   <li>Lock in your accusation any time — earlier = more points: 300 / 200 / 100.</li>
+   <li>When everyone's locked in, the reveal plays on <b>everyone's screen at once</b>. Whoever solved it makes the news.</li></ol></div>
   <footer>The Last Night · every code makes a different case · 🎵 tap the music button to mute</footer></div>`;
 }
-
 /* ---------------- CASE ---------------- */
 function openCase(raw){
   CODE=norm(raw);if(!CODE){home();return}
   C=isPresetCode(CODE)?PRESET:generateCase(CODE);
-  PG=loadPG(CODE);TAB=PG.tab||'file';FADE=true;SEARCH_Q='';
+  PGKEY='tln3:'+CODE;PG=loadPG(PGKEY);TAB=PG.tab||'file';FADE=true;SEARCH_Q='';
   setGenreTheme(C.genre);
   document.title='Case #'+C.number+' — '+C.title;
   if(!PG.mode)setupView();else renderCase();
@@ -957,28 +981,33 @@ function openCase(raw){
 function caseHead(){
   const G=GENRES[C.genre];
   const rl=['Stage 1 · Statements','Stage 2 · Evidence','Stage 3 · Interviews'][PG.round-1];
+  const who=online()?(meIdx()<0&&ROOM.roster?' · 👀 Watching':' · Crew: '+esc(listNames(PG.players.map(p=>p.name)))):host()?' · Crew: '+esc(listNames(PG.players.map(p=>p.name))):' · Following along';
   return `<div class="topbar"><button class="link" onclick="goHome()">← All cases</button>
-    <button class="codechip" onclick="share()">CASE CODE <b>${CODE}</b> · Share</button></div>
+    ${online()?`<button class="codechip" onclick="share()"><span class="dot ${NET.status}"></span>ROOM <b>${ROOMCODE}</b> · Invite</button>`:`<button class="codechip" onclick="share()">CASE CODE <b>${CODE}</b> · Share</button>`}</div>
    <div class="paper casehead"><div class="stamp">${PG.revealed?'CASE CLOSED':'CONFIDENTIAL'}</div>
     <div class="cf">CASE FILE #${C.number}</div><h1>${esc(C.title)}</h1>
     <div class="sub type">${esc(C.place)} &nbsp;<span class="gbadge">${G.icon} ${G.label}</span></div>
-    ${PG.mode?`<div class="progress">${[1,2,3].map(n=>`<span class="${PG.round>=n?'on':''}"></span>`).join('')}</div>
-    <div class="plabel">${PG.revealed?'Solved':rl}${host()?' · Crew: '+esc(listNames(PG.players.map(p=>p.name))):' · Following along'}</div>`:''}</div>`;
+    ${PG.mode&&(!online()||ROOM.roster)?`<div class="progress">${[1,2,3].map(n=>`<span class="${PG.round>=n?'on':''}"></span>`).join('')}</div>
+    <div class="plabel">${PG.revealed?'Solved':rl}${who}</div>`:''}</div>`;
 }
-
 /* setup: names */
 let SETUP_NAMES=null;
 function setupView(){
   if(!SETUP_NAMES){const crew=lsGet('tln:crew',[]);SETUP_NAMES=crew.length?crew.slice():['',''];}
+  const my=lsGet('tln:myname','');
   app.innerHTML=`<div class="wrap fadein">${caseHead()}
-   <div class="paper" style="margin-top:14px"><div class="cf">BEFORE WE START</div><h2>Who's on the case?</h2>
-    <p class="type">Type in every detective's name. Whoever cracks it gets their name in the news.</p>
-    <div id="names">${SETUP_NAMES.map((n,i)=>`<div class="row nm"><span class="num">${i+1}</span><input value="${esc(n)}" maxlength="18" placeholder="Detective name" oninput="SETUP_NAMES[${i}]=this.value">${SETUP_NAMES.length>1?`<button class="btn ghost x" onclick="SETUP_NAMES.splice(${i},1);setupView()">✕</button>`:''}</div>`).join('')}</div>
-    ${SETUP_NAMES.length<8?`<button class="btn ghost" onclick="SETUP_NAMES.push('');setupView();setTimeout(()=>{const a=document.querySelectorAll('#names input');a[a.length-1].focus()},0)">+ Add detective</button>`:''}
-    <div class="note-box"><b>📱 This phone runs the game.</b> Everyone votes and makes their accusation here — pass it around. Your crew can still read the case on their own phones by opening the same code.</div>
-    <div class="actions"><button class="btn red" onclick="startHost()">Start the investigation →</button></div>
-    <hr class="sep"><p class="type small">Just reading along on your own phone while someone else hosts?</p>
-    <button class="btn ghost" onclick="startFollow()">I'm just following along</button></div></div>`;
+   <div class="paper mode-online" style="margin-top:14px"><div class="cf">🌐 PLAY ONLINE · RECOMMENDED</div><h2>Everyone on their own phone</h2>
+    <p class="type">You get a room code. Your crew types it in and joins your game. Votes, accusations and the reveal sync live.</p>
+    <div class="lab">Your name</div>
+    <div class="row"><input id="hostName" maxlength="18" placeholder="Your detective name" value="${esc(my)}" onkeydown="if(event.key==='Enter')createRoom()"><button class="btn red" onclick="createRoom()">Create room →</button></div></div>
+   <details class="paper alt" style="margin-top:14px"><summary><b>📱 One phone instead</b> — pass it around</summary>
+    <p class="type small">Everyone votes and accuses on this phone. No internet needed after loading.</p>
+    <div id="names">${SETUP_NAMES.map((n,i)=>`<div class="row nm"><span class="num">${i+1}</span><input value="${esc(n)}" maxlength="18" placeholder="Detective name" oninput="SETUP_NAMES[${i}]=this.value">${SETUP_NAMES.length>1?`<button class="btn ghost x" onclick="SETUP_NAMES.splice(${i},1);setupView();document.querySelector('details.alt').open=true">✕</button>`:''}</div>`).join('')}</div>
+    ${SETUP_NAMES.length<8?`<button class="btn ghost" onclick="SETUP_NAMES.push('');setupView();document.querySelector('details.alt').open=true">+ Add detective</button>`:''}
+    <div class="actions"><button class="btn red" onclick="startHost()">Start on this phone →</button></div></details>
+   <details class="paper alt" style="margin-top:14px"><summary><b>👀 Just reading</b> — no votes, no scores</summary>
+    <p class="type small">Read the case on your own. You unlock the stages yourself.</p>
+    <button class="btn ghost" onclick="startFollow()">Just let me read</button></details></div>`;
   FADE=false;
 }
 function startHost(){
@@ -1005,6 +1034,8 @@ function tabContent(){
 }
 function fileTab(){
   const away=C.suspects.filter(s=>s.away).length;
+  const crew=online()?`<h3>The crew</h3><div class="crew">${PG.players.map(p=>`<div class="crewrow"><span>${ROOM.meta&&ROOM.meta.host===p.pid?'👑 ':''}${esc(p.name)}${p.pid===PG.pid?' <i>(you)</i>':''}</span>${isHostMe()&&p.pid!==PG.pid&&!PG.revealed?`<button class="btn ghost sm" onclick="kick('${p.pid}')">Remove</button>`:''}</div>`).join('')}</div>
+    ${isHostMe()?'<p class="type small muted">If someone drops out, remove them so the votes don\'t get stuck.</p>':''}`:'';
   return `<div class="paper"><div class="cf">THE NIGHT IN QUESTION</div>
    <p class="type">${esc(C.intro)}</p>
    <h3>Official Investigation Status</h3>
@@ -1016,11 +1047,11 @@ function fileTab(){
     <li><span>Number of suspects</span><span>6${away?` (${away} not at the scene)`:''}</span></li>
     <li><span>Confirmed murderer</span><span>${C.genre==='unsolvable'?'Unknown':'1'}</span></li></ul>
    <div class="chief"><b>CHIEF INSPECTOR</b><p class="type">"${esc(C.inspector)}"</p></div>
-   <div class="sharebox"><small>Share this code with your crew</small><div class="big">${CODE}</div>
+   ${crew}
+   <div class="sharebox"><small>${online()?'Room code — late friends can still watch':'Share this code with your crew'}</small><div class="big">${online()?ROOMCODE:CODE}</div>
     <button class="btn red" onclick="share()">Copy invite link</button></div>
    <div class="actions"><button class="btn red" onclick="setTab('suspects')">Meet the suspects →</button></div></div>`;
 }
-
 /* suspects */
 function markTag(i){const m=PG.marks[i];return m==='s'?'<span class="tagm s">SUS</span>':m==='c'?'<span class="tagm c">CLEARED</span>':''}
 function isAway(i){return !!(C.suspects[i].away&&!PG.visited[i])}
@@ -1063,28 +1094,33 @@ function visit(i){
 /* stage gates: everyone votes */
 function stageGate(stage){
   const what=stage===2?'the evidence':'the interviews';
-  if(!host())return `<div class="paper locked"><div class="ic">🔒</div><h2>${stage===2?'Forensic Evidence':'Follow-up Interviews'} — Sealed</h2>
-    <p class="type">You're following along. Your host's crew votes on their phone. When they open ${what}, tap below.</p>
-    ${stage===3&&PG.round<2?'<p class="hint">Open the evidence first.</p>':`<button class="btn red" onclick="followUnlock(${stage})">My host opened ${what}</button>`}</div>`;
+  if(!host()&&!online())return `<div class="paper locked"><div class="ic">🔒</div><h2>${stage===2?'Forensic Evidence':'Follow-up Interviews'} — Sealed</h2>
+    <p class="type">Unlock it when you're ready.</p>
+    ${stage===3&&PG.round<2?'<p class="hint">Open the evidence first.</p>':`<button class="btn red" onclick="followUnlock(${stage})">Open ${what}</button>`}</div>`;
   if(stage===3&&PG.round<2)return `<div class="paper locked"><div class="ic">🔒</div><h2>Follow-up Interviews</h2><p class="type">The crew has to open the evidence first.</p><button class="btn" onclick="setTab('evidence')">Go to evidence</button></div>`;
-  const v=PG.votes[stage]||{}, n=PG.players.length, done=PG.players.filter((p,i)=>v[i]).length;
+  const v=PG.votes[stage]||{}, n=PG.players.length, done=PG.players.filter((p,i)=>v[i]).length, me=meIdx();
   let res='';
-  if(done===n){
+  if(n&&done===n){
     const tally={};let ready=0;
     PG.players.forEach((p,i)=>{const x=v[i];tally[x.sus]=(tally[x.sus]||0)+1;if(x.ready)ready++});
     const rows=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
-    const ok=ready*2>=n;
+    const ok=ready*2>=n, canAct=host()||me>=0;
     res=`<div class="tally"><div class="lab">Most suspicious right now</div>${rows.map(([k,c])=>`<div class="trow"><span>${k==='-2'?'🤷 Not sure yet':esc(C.suspects[k].name)}</span><span class="tbar"><i style="width:${c/n*100}%"></i></span><b>${c}</b></div>`).join('')}
       <div class="lab" style="margin-top:12px">Ready to move on: ${ready} of ${n}</div></div>
-      ${ok?`<button class="btn red" onclick="PG.round=${stage};savePG();renderCase()">Open ${what} →</button>`:
-      `<p class="type">The crew wants more time. Keep investigating, then vote again.</p><button class="btn" onclick="delete PG.votes[${stage}];savePG();renderCase()">Vote again</button>`}`;
+      ${ok?(canAct?`<button class="btn red" onclick="openStage(${stage})">Open ${what} →</button>`:'<p class="hint">Waiting for the crew to open it…</p>'):
+      `<p class="type">The crew wants more time. Keep investigating, then vote again.</p>${canAct?`<button class="btn" onclick="voteAgain(${stage})">Vote again</button>`:''}`}`;
   }
+  const intro=online()?'Everyone votes on their own phone before the investigation moves on. Votes stay secret until everyone\'s in.':'Everyone votes before the investigation moves on. Pass the phone — votes stay secret until everyone\'s in.';
+  const chips=PG.players.map((p,i)=>{const mine=online()&&i===me, clickable=host()?!v[i]&&done<n:false;
+    return `<button class="voter ${v[i]?'done':''} ${mine?'me':''}" ${clickable?`onclick="castVote(${stage},${i})"`:'disabled'}>${v[i]?'✔':'⏳'} ${esc(p.name)}${mine?' (you)':''}</button>`}).join('');
+  const myBtn=online()&&me>=0&&!v[me]?`<button class="btn red" onclick="castVote(${stage},${me})">🗳️ Cast my vote</button>`:'';
+  const watch=online()&&me<0?'<p class="hint">You joined late, so you\'re watching. The crew\'s votes show up here live.</p>':'';
   return `<div class="paper locked"><div class="ic">🗳️</div><h2>Crew vote: open ${what}?</h2>
-   <p class="type">Everyone votes before the investigation moves on. Pass the phone — votes stay secret until everyone's in.</p>
-   <div class="voters">${PG.players.map((p,i)=>`<button class="voter ${v[i]?'done':''}" ${v[i]||done===n?'disabled':''} onclick="castVote(${stage},${i})">${v[i]?'✔':'⏳'} ${esc(p.name)}</button>`).join('')}</div>
-   <p class="hint">${done} of ${n} voted</p>${res}</div>`;
+   <p class="type">${intro}</p>
+   <div class="voters">${chips}</div>
+   <p class="hint">${done} of ${n} voted${online()&&done<n&&me>=0&&v[me]?' — waiting for the others…':''}</p>${myBtn}${watch}${res}</div>`;
 }
-function followUnlock(stage){confirmBox('Open '+(stage===2?'the evidence':'the interviews')+'?','Only do this once your host says so.','Open',()=>{PG.round=Math.max(PG.round,stage);savePG();renderCase()})}
+function followUnlock(stage){PG.round=Math.max(PG.round,stage);savePG();renderCase()}
 function passPhone(name,next){
   const m=openModal(`<div class="cf">SECRET</div><h2>Pass the phone to ${esc(name)}</h2><p class="type">Everyone else — look away. 👀</p>
    <div class="actions end"><button class="btn ghost" data-close>Cancel</button><button class="btn red" id="imp">I'm ${esc(name)}</button></div>`);
@@ -1092,7 +1128,7 @@ function passPhone(name,next){
 }
 function castVote(stage,i){
   const p=PG.players[i];let sel=null,ready=null;
-  passPhone(p.name,draw);
+  if(online())draw();else passPhone(p.name,draw);
   function draw(){
     const m=openModal(`<div class="cf">${esc(p.name.toUpperCase())}'S SECRET VOTE</div><h2>Before ${stage===2?'the evidence':'the interviews'} open…</h2>
      <div class="lab">Who's the most suspicious right now?</div>
@@ -1103,10 +1139,12 @@ function castVote(stage,i){
      <div class="actions end"><button class="btn ghost" data-close>Cancel</button><button class="btn red" id="cast" ${sel==null||ready==null?'disabled':''}>Cast secret vote</button></div>`,true);
     m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{sel=+b.dataset.s;draw()});
     m.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ready=b.dataset.r==='1';draw()});
-    m.querySelector('#cast').onclick=()=>{PG.votes[stage]=PG.votes[stage]||{};PG.votes[stage][i]={sus:sel,ready};savePG();closeModal();renderCase();toast('Vote locked. Pass it on!')};
+    m.querySelector('#cast').onclick=()=>{
+      closeModal();
+      if(online()){pub('v/'+stage+'/'+(ROOM.att[stage]||0)+'/'+PG.pid,{sus:sel,ready});toast('Vote sent!');return}
+      PG.votes[stage]=PG.votes[stage]||{};PG.votes[stage][i]={sus:sel,ready};savePG();renderCase();toast('Vote locked. Pass it on!')};
   }
 }
-
 /* evidence & interviews */
 function pinBtn(cat,sus,text){return `<button class="pin" title="Save to notes" onclick="quickNote('${cat}',${sus==null?'null':sus},${JSON.stringify(text).replace(/"/g,'&quot;')})">📒</button>`}
 function evidenceTab(){
@@ -1196,19 +1234,24 @@ function searchResults(){
 function accName(a){return a===-1?'Nobody here (outside job)':C.suspects[a].name}
 function accuseTab(){
   if(PG.revealed)return revealView();
-  if(!host())return `<div class="paper locked"><div class="ic">⚖️</div><h2>Accusations</h2><p class="type">You're following along — accusations are made on your host's phone. Once the host reveals the truth, you can see it here too.</p>
-    <button class="btn red" onclick="confirmBox('Show the answer?','Only do this after your host has revealed it — no peeking!','Show me',()=>{PG.revealed=true;savePG();renderCase()})">The host revealed it — show me</button></div>`;
-  const n=PG.players.length,locked=PG.players.filter(p=>p.acc!=null).length;
+  if(!host()&&!online())return `<div class="paper locked"><div class="ic">⚖️</div><h2>Who did it?</h2><p class="type">You're just reading, so there's no scoring. Made up your mind? Peek at the answer.</p>
+    <button class="btn red" onclick="confirmBox('Show the answer?','No take-backs — the mystery\\'s over once you look.','Show me',()=>{PG.revealed=true;savePG();renderCase()})">Show me the answer</button></div>`;
+  const n=PG.players.length,locked=PG.players.filter(p=>p.acc!=null).length,me=meIdx();
+  const chips=PG.players.map((p,i)=>{const mine=online()&&i===me, clickable=host()&&p.acc==null;
+    return `<button class="voter ${p.acc!=null?'done':''} ${mine?'me':''}" ${clickable?`onclick="accuse(${i})"`:'disabled'}>${p.acc!=null?'🔒 '+esc(p.name)+' · Stage '+p.accRound:'⚖️ '+esc(p.name)}${mine?' (you)':''}</button>`}).join('');
+  const myBtn=online()&&me>=0&&PG.players[me].acc==null?`<button class="btn red" onclick="accuse(${me})">⚖️ Lock in my accusation</button>`:'';
+  const canReveal=(host()||me>=0)&&n&&locked===n;
   return `<div class="paper"><div class="cf">FINAL ACCUSATIONS</div><h2>Who killed ${esc(C.victim.first)}?</h2>
    <p class="type small">Each detective locks in a secret accusation. Lock in early for more points: right now it's worth <b>${PTS[PG.round]}</b>. Everyone must lock in before the reveal.</p>
    ${PG.notesList.length?`<button class="btn ghost" onclick="setTab('notes')">📒 Review your ${PG.notesList.length} note${PG.notesList.length===1?'':'s'} first</button>`:''}
-   <div class="voters" style="margin-top:14px">${PG.players.map((p,i)=>`<button class="voter ${p.acc!=null?'done':''}" ${p.acc!=null?'disabled':''} onclick="accuse(${i})">${p.acc!=null?'🔒 '+esc(p.name)+' · Stage '+p.accRound:'⚖️ '+esc(p.name)}</button>`).join('')}</div>
-   <p class="hint">${locked} of ${n} locked in</p>
-   <div class="actions"><button class="btn red" ${locked<n?'disabled':''} onclick="reveal()">Reveal the Truth</button></div></div>`;
+   <div class="voters" style="margin-top:14px">${chips}</div>
+   <p class="hint">${locked} of ${n} locked in</p>${myBtn}
+   ${online()&&me<0?'<p class="hint">You\'re watching — the reveal will play here when the crew is done.</p>':''}
+   <div class="actions"><button class="btn red" ${canReveal?'':'disabled'} onclick="reveal()">Reveal the Truth${online()?' (for everyone)':''}</button></div></div>`;
 }
 function accuse(i){
   const p=PG.players[i];let sel=null,why='';
-  passPhone(p.name,draw);
+  if(online())draw();else passPhone(p.name,draw);
   function draw(){
     const nob=C.genre==='unsolvable'?`<button class="vopt ${sel===-1?'on':''}" data-s="-1"><span class="av q">∅</span>None of them</button>`:'';
     const m=openModal(`<div class="cf">${esc(p.name.toUpperCase())}'S ACCUSATION</div><h2>Who did it?</h2>
@@ -1218,24 +1261,22 @@ function accuse(i){
      <div class="actions end"><button class="btn ghost" data-close>Cancel</button><button class="btn red" id="lk" ${sel==null?'disabled':''}>🔒 Lock it in</button></div>`,true);
     const w=m.querySelector('#why');w.oninput=()=>{why=w.value};
     m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{sel=+b.dataset.s;draw()});
-    m.querySelector('#lk').onclick=()=>{p.acc=sel;p.accRound=PG.round;p.why=why.trim();savePG();closeModal();renderCase();toast('Locked in. Pass it on!')};
+    m.querySelector('#lk').onclick=()=>{
+      closeModal();
+      if(online()){pub('a/'+PG.pid,{acc:sel,round:PG.round,why:why.trim()});toast('Locked in!');return}
+      p.acc=sel;p.accRound=PG.round;p.why=why.trim();savePG();renderCase();toast('Locked in. Pass it on!')};
   }
 }
 function reveal(){
-  confirmBox('Reveal the truth?','Everyone\'s locked in. Gather around…','Reveal',()=>{
-    let c=3;const m=openModal('<div class="count" id="cnt">3</div>');
-    const iv=setInterval(()=>{c--;if(c>0){document.getElementById('cnt').textContent=c;return}clearInterval(iv);closeModal();
-      PG.revealed=true;
-      const n=makeNews(C,PG);PG.news=n;
-      const list=lsGet('tln:news',[]).filter(x=>x.code!==CODE);list.push({code:CODE,paper:n.paper,date:n.date,hl:n.hl,right:n.right});lsSet('tln:news',list.slice(-30));
-      if(!PG.scored){const b=lsGet('tln:board',{});PG.players.forEach(p=>{const r=p.acc===C.killer;const e=b[p.name]||{pts:0,solved:0,played:0};e.played++;if(r){e.solved++;e.pts+=PTS[p.accRound]}b[p.name]=e});lsSet('tln:board',b);PG.scored=true}
-      savePG();TAB='accuse';renderCase();window.scrollTo(0,0)},900);
+  confirmBox('Reveal the truth?',online()?'This plays the reveal on everyone\'s phone at the same time.':'Everyone\'s locked in. Gather around…','Reveal',()=>{
+    if(online()){pub('reveal',{t:Date.now()});return}
+    countdownReveal();
   });
 }
 function revealView(){
-  const k=C.killer>=0?C.suspects[C.killer]:null;
-  const rows=host()?PG.players.map(p=>{const r=p.acc===C.killer;return `<div class="vrow ${r?'win':'lose'}"><b>${esc(p.name)}</b><span>${esc(accName(p.acc))}${p.why?` — <i>"${esc(p.why)}"</i>`:''}</span><em>${r?'✔ +'+PTS[p.accRound]:'✘ 0'}</em></div>`}).join(''):'';
-  const news=host()?(PG.news||makeNews(C,PG)):null;
+  const k=C.killer>=0?C.suspects[C.killer]:null, scored=host()||online();
+  const rows=scored?PG.players.map(p=>{const r=p.acc===C.killer;return `<div class="vrow ${r?'win':'lose'}"><b>${esc(p.name)}</b><span>${p.acc==null?'—':esc(accName(p.acc))}${p.why?` — <i>"${esc(p.why)}"</i>`:''}</span><em>${r?'✔ +'+PTS[p.accRound]:'✘ 0'}</em></div>`}).join(''):'';
+  const news=scored?(PG.news||makeNews(C,PG)):null;
   return `<div class="paper reveal"><div class="head"><span class="bigstamp">${k?'CASE CLOSED':'CASE STAYS OPEN'}</span>
     <div class="cf" style="margin-top:18px">${k?'THE MURDERER WAS':'THE TRUTH'}</div>
     ${k?`<div class="revav">${avatarSVG(k)}</div>`:''}
@@ -1246,15 +1287,201 @@ function revealView(){
    <h3>${k?'Why the others are innocent':'Why all six are innocent'}</h3><ul>${C.suspects.map((s,i)=>i===C.killer?'':`<li><b>${esc(s.name)}</b> — ${esc(s.clear)}</li>`).join('')}</ul></div>
    ${news?`<div class="cf lbl" style="margin-top:22px">📰 IN THE NEWS</div>${newsHTML(news)}`:''}
    <div class="actions"><button class="btn red" onclick="go(newCode('random'))">Play a new case</button>
-    <button class="btn ghost" onclick="resetCase()">Replay this case</button></div>`;
+    ${online()?`<button class="btn ghost" onclick="go('${CODE}')">Leave room</button>`:`<button class="btn ghost" onclick="resetCase()">Replay this case</button>`}</div>`;
 }
 function resetCase(){confirmBox('Replay this case?','Clears names, votes, notes, visits and accusations for this case on this device.','Reset',()=>{PG=defPG();TAB='file';savePG();setupView()})}
 function share(){
-  const url=location.protocol.startsWith('http')?location.origin+location.pathname+'#case='+CODE:'';
-  const text='Join my case in The Last Night! Case code: '+CODE+(url?'\n'+url:'');
-  if(navigator.share&&url){navigator.share({title:'The Last Night',text:'Case code: '+CODE,url}).catch(()=>{});return}
-  if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Invite copied!'),()=>toast('Case code: '+CODE))}else toast('Case code: '+CODE);
+  const base=location.protocol.startsWith('http')?location.origin+location.pathname:'';
+  const frag=online()?'#room='+ROOMCODE:'#case='+CODE;
+  const url=base?base+frag:'';
+  const label=online()?'Room code: '+ROOMCODE:'Case code: '+CODE;
+  const text='Join my case in The Last Night! '+label+(url?'\n'+url:'');
+  if(navigator.share&&url){navigator.share({title:'The Last Night',text:label,url}).catch(()=>{});return}
+  if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Invite copied!'),()=>toast(label))}else toast(label);
 }
+function online(){return PG&&PG.mode==='online'}
+function meIdx(){return online()?PG.players.findIndex(p=>p.pid===PG.pid):-1}
+function isHostMe(){return online()&&ROOM&&ROOM.meta&&ROOM.meta.host===PG.pid}
+function joinRoom(){const v=norm(document.getElementById('roomIn').value);if(v.length!==5){toast('Room codes are 5 characters');return}location.hash='room='+v}
+function openStage(stage){if(online()){pub('round',{r:stage});return}PG.round=stage;savePG();renderCase()}
+function voteAgain(stage){if(online()){pub('att/'+stage,{n:(ROOM.att[stage]||0)+1});return}delete PG.votes[stage];savePG();renderCase()}
+function countdownReveal(){
+  if(REVEALING)return;REVEALING=true;
+  let c=3;openModal('<div class="count" id="cnt">3</div>');
+  const iv=setInterval(()=>{c--;const el=document.getElementById('cnt');if(c>0&&el){el.textContent=c;return}clearInterval(iv);closeModal();REVEALING=false;doReveal()},900);
+}
+function doReveal(){
+  if(PG.revealed&&PG.scored)return;
+  PG.revealed=true;
+  if(host()||online()){
+    const n=makeNews(C,PG);PG.news=n;
+    const list=lsGet('tln:news',[]).filter(x=>x.code!==CODE);list.push({code:CODE,paper:n.paper,date:n.date,hl:n.hl,right:n.right});lsSet('tln:news',list.slice(-30));
+    if(!PG.scored){const b=lsGet('tln:board',{});PG.players.forEach(p=>{const r=p.acc===C.killer;const e=b[p.name]||{pts:0,solved:0,played:0};e.played++;if(r){e.solved++;e.pts+=PTS[p.accRound]}b[p.name]=e});lsSet('tln:board',b)}
+  }
+  PG.scored=true;savePG();TAB='accuse';renderCase();window.scrollTo(0,0);
+}
+
+/* =====================================================================
+   ONLINE ROOMS (free public MQTT relay — no server needed)
+   ===================================================================== */
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const RA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const NET={c:null,room:null,base:'',status:'off'};
+function emptyRoom(){return{meta:null,players:{},roster:null,votes:{},att:{},round:1,acc:{},reveal:null}}
+function rid(){return Math.random().toString(36).slice(2,10)}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function brokerFor(room){return RA.indexOf(room[0])%BROKERS.length}
+function genRoom(idx){let s;do{s='';for(let i=0;i<5;i++)s+=RA[Math.floor(Math.random()*RA.length)]}while(brokerFor(s)!==idx);return s}
+function loadMqtt(){
+  return new Promise((res,rej)=>{
+    if(window.mqtt)return res(window.mqtt);
+    const urls=['https://unpkg.com/mqtt@5/dist/mqtt.min.js','https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js'];let k=0;
+    const next=()=>{if(k>=urls.length)return rej(new Error('lib'));const s=document.createElement('script');s.src=urls[k++];s.onload=()=>window.mqtt?res(window.mqtt):next();s.onerror=next;document.head.appendChild(s)};
+    next();
+  });
+}
+function mqttConnect(url){
+  return new Promise((res,rej)=>{
+    let c;try{c=mqtt.connect(url,{clientId:'tln_'+rid(),clean:true,connectTimeout:7000,reconnectPeriod:2500,keepalive:30})}catch(e){return rej(e)}
+    let done=false;
+    const t=setTimeout(()=>{if(!done){done=true;try{c.end(true)}catch(e){}rej(new Error('timeout'))}},8000);
+    c.once('connect',()=>{if(!done){done=true;clearTimeout(t);res(c)}});
+    c.once('error',e=>{if(!done){done=true;clearTimeout(t);try{c.end(true)}catch(_){}rej(e)}});
+  });
+}
+function netAttach(client,room){
+  NET.c=client;NET.room=room;NET.base='thelastnight/v3/'+room;NET.status='live';ROOM=emptyRoom();
+  client.on('message',(t,p)=>{if(client===NET.c)onNet(t,p)});
+  client.on('connect',()=>{if(client!==NET.c)return;NET.status='live';client.subscribe(NET.base+'/#',{qos:1});netStatus()});
+  client.on('offline',()=>{if(client!==NET.c)return;NET.status='off';netStatus()});
+  client.on('reconnect',()=>{if(client!==NET.c)return;NET.status='wait';netStatus()});
+  return new Promise(r=>client.subscribe(NET.base+'/#',{qos:1},()=>r()));
+}
+function netLeave(){if(NET.c){try{NET.c.end(true)}catch(e){}}NET.c=null;NET.room=null;NET.status='off';ROOM=null}
+function netStatus(){const d=document.querySelector('.codechip .dot');if(d)d.className='dot '+NET.status;if(NET.status==='off')toast('Connection lost — reconnecting…')}
+function pub(sub,obj){if(!NET.c){toast('Not connected');return}NET.c.publish(NET.base+'/'+sub,obj==null?'':JSON.stringify(obj),{qos:1,retain:true})}
+function onNet(topic,payload){
+  if(!ROOM||!topic.startsWith(NET.base+'/'))return;
+  const parts=topic.slice(NET.base.length+1).split('/');
+  const str=payload?payload.toString():'';let d=null;
+  if(str){try{d=JSON.parse(str)}catch(e){return}}
+  const R=ROOM;
+  switch(parts[0]){
+    case 'meta':R.meta=d;break;
+    case 'p':if(d)R.players[parts[1]]=d;else delete R.players[parts[1]];break;
+    case 'roster':R.roster=d;break;
+    case 'v':{const st=parts[1],att=parts[2],pid=parts[3];R.votes[st]=R.votes[st]||{};R.votes[st][att]=R.votes[st][att]||{};if(d)R.votes[st][att][pid]=d;else delete R.votes[st][att][pid];break}
+    case 'att':R.att[parts[1]]=d?d.n:0;break;
+    case 'round':R.round=Math.max(R.round||1,d?d.r:1);break;
+    case 'a':if(d)R.acc[parts[1]]=d;else delete R.acc[parts[1]];break;
+    case 'reveal':R.reveal=d;break;
+  }
+  scheduleRoomRender();
+}
+let rrT=null,pendingRR=false;
+function typing(){const ae=document.activeElement;return ae&&app.contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)}
+function scheduleRoomRender(){clearTimeout(rrT);rrT=setTimeout(()=>{if(!ROOM)return;if(typing()){pendingRR=true;return}roomRender()},120)}
+document.addEventListener('focusout',()=>{if(pendingRR)setTimeout(()=>{if(pendingRR&&!typing()&&ROOM){pendingRR=false;roomRender()}},60)});
+
+function syncFromRoom(){
+  const R=ROOM;
+  const pids=R.roster?R.roster.pids:Object.keys(R.players).sort((a,b)=>(R.players[a].t||0)-(R.players[b].t||0));
+  PG.players=pids.filter(pid=>R.players[pid]||(R.roster&&R.roster.names&&R.roster.names[pid])).map(pid=>{const a=R.acc[pid];return{pid,name:(R.players[pid]||{}).name||R.roster.names[pid],acc:a?a.acc:null,accRound:a?a.round:null,why:a?a.why||'':''}});
+  PG.round=Math.max(1,R.round||1);
+  PG.votes={};
+  [2,3].forEach(st=>{const vs=(R.votes[st]&&R.votes[st][R.att[st]||0])||{};PG.votes[st]={};PG.players.forEach((p,i)=>{if(vs[p.pid])PG.votes[st][i]=vs[p.pid]})});
+}
+function msgScreen(icon,title,text,btns){
+  app.innerHTML=`<div class="wrap fadein"><div class="paper locked" style="margin-top:40px"><div class="ic">${icon}</div><h2>${title}</h2><p class="type">${text}</p>${btns||''}</div></div>`;
+}
+async function openRoom(raw){
+  const room=norm(raw).slice(0,5);
+  if(room.length!==5){msgScreen('❓','That room code looks off','Room codes are 5 characters long.','<button class="btn red" onclick="goHome()">Back</button>');return}
+  ROOMCODE=room;
+  if(!(NET.c&&NET.room===room)){
+    netLeave();setGenreTheme('');
+    msgScreen('📡','Connecting to room '+room+'…','Hang tight.');
+    try{await loadMqtt();const c=await mqttConnect(BROKERS[brokerFor(room)]);await netAttach(c,room)}
+    catch(e){msgScreen('📵','Couldn\'t connect','Check your internet and try again. (Online rooms need a connection.)',`<button class="btn red" onclick="route()">Try again</button> <button class="btn ghost" onclick="goHome()">Home</button>`);return}
+  }
+  PGKEY='tln3room:'+room;PG=loadPG(PGKEY);PG.mode='online';if(!PG.pid){PG.pid=rid();savePG()}
+  const t0=Date.now();while(ROOM&&!ROOM.meta&&Date.now()-t0<4500)await sleep(150);
+  if(!ROOM)return;
+  if(!ROOM.meta){msgScreen('🕵️','Room not found','Nobody\'s running room '+room+'. Double-check the code with your host.','<button class="btn red" onclick="goHome()">Back</button>');return}
+  C=null;FADE=true;roomRender();
+}
+function roomRender(){
+  if(!ROOM||!ROOM.meta)return;
+  if(!C||CODE!==ROOM.meta.case){CODE=ROOM.meta.case;C=isPresetCode(CODE)?PRESET:generateCase(CODE);setGenreTheme(C.genre);document.title='Room '+ROOMCODE+' — '+C.title;TAB=PG.tab||'file'}
+  syncFromRoom();
+  const inRoom=!!ROOM.players[PG.pid];
+  if(!ROOM.roster){if(!inRoom)return nameScreen();return lobbyScreen()}
+  if(ROOM.reveal&&!PG.revealed){
+    if(Date.now()-ROOM.reveal.t<30000&&!REVEALING){renderCase();countdownReveal();return}
+    if(!REVEALING){doReveal();return}
+  }
+  renderCase();
+}
+function nameScreen(){
+  const my=lsGet('tln:myname','');
+  app.innerHTML=`<div class="wrap fadein">${caseHead()}
+   <div class="paper" style="margin-top:14px"><div class="cf">🌐 ROOM ${ROOMCODE}</div><h2>You're invited!</h2>
+    <p class="type">${esc(hostName())} opened this case. Enter your name to join the crew.</p>
+    <div class="row"><input id="myName" maxlength="18" placeholder="Your detective name" value="${esc(my)}" onkeydown="if(event.key==='Enter')joinAs()"><button class="btn red" onclick="joinAs()">Join →</button></div></div></div>`;
+  FADE=false;
+}
+function hostName(){const h=ROOM.meta&&ROOM.players[ROOM.meta.host];return h?h.name:'Your host'}
+function joinAs(){
+  const n=document.getElementById('myName').value.trim().slice(0,18);if(!n){toast('Type your name');return}
+  const taken=Object.entries(ROOM.players).some(([pid,p])=>pid!==PG.pid&&p.name.toLowerCase()===n.toLowerCase());
+  if(taken){toast('Someone already has that name');return}
+  lsSet('tln:myname',n);document.activeElement&&document.activeElement.blur();
+  pub('p/'+PG.pid,{name:n,t:Date.now()});
+}
+function lobbyScreen(){
+  const ps=PG.players;
+  app.innerHTML=`<div class="wrap ${FADE?'fadein':''}">${caseHead()}
+   <div class="paper lobby" style="margin-top:14px"><div class="cf">🌐 ONLINE ROOM</div>
+    <div class="roomcode">${ROOMCODE}</div>
+    <p class="type">Tell your crew to type this code on the home screen — or send them the link.</p>
+    <button class="btn red" onclick="share()">📤 Copy invite link</button>
+    <h3>In the room (${ps.length})</h3>
+    <div class="crew">${ps.map(p=>`<div class="crewrow"><span>${ROOM.meta.host===p.pid?'👑 ':'🕵️ '}${esc(p.name)}${p.pid===PG.pid?' <i>(you)</i>':''}</span></div>`).join('')}</div>
+    ${isHostMe()?`<p class="type small muted">Start when everyone's in. People who join after you start can only watch.</p><button class="btn red block" onclick="startRoom()">Start the investigation (${ps.length} player${ps.length===1?'':'s'}) →</button>`:
+      `<p class="type waiting">Waiting for ${esc(hostName())} to start<span class="dots"></span></p>`}
+   </div></div>`;
+  FADE=false;
+}
+function startRoom(){
+  const ps=PG.players;const names={};ps.forEach(p=>names[p.pid]=p.name);
+  confirmBox('Start now?',ps.length+' detective'+(ps.length===1?'':'s')+': '+esc(listNames(ps.map(p=>p.name)))+'. Anyone who joins later can only watch.','Start',()=>pub('roster',{pids:ps.map(p=>p.pid),names}));
+}
+function kick(pid){
+  const p=PG.players.find(x=>x.pid===pid);
+  confirmBox('Remove '+esc(p.name)+'?','Their votes won\'t count anymore and the crew can keep going without them.','Remove',()=>{
+    const pids=ROOM.roster.pids.filter(x=>x!==pid);pub('roster',{pids,names:ROOM.roster.names});
+  });
+}
+async function createRoom(){
+  const name=(document.getElementById('hostName').value||'').trim().slice(0,18);
+  if(!name){toast('Type your name first');return}
+  lsSet('tln:myname',name);
+  const caseCode=CODE;
+  msgScreen('📡','Opening a room…','Finding a free line.');
+  let client=null,idx=-1;
+  try{await loadMqtt()}catch(e){}
+  if(window.mqtt){for(let i=0;i<BROKERS.length&&!client;i++){try{client=await mqttConnect(BROKERS[i]);idx=i}catch(e){}}}
+  if(!client){msgScreen('📵','Couldn\'t open a room','Check your internet and try again. You can also play on one phone instead.',`<button class="btn red" onclick="go('${caseCode}')">Back</button>`);return}
+  netLeave();
+  const room=genRoom(idx);
+  await netAttach(client,room);
+  const pid=rid();
+  lsSet('tln3room:'+room,Object.assign(defPG(),{mode:'online',pid}));
+  pub('meta',{case:caseCode,host:pid,t:Date.now()});
+  pub('p/'+pid,{name,t:Date.now()});
+  location.hash='room='+room;
+}
+
 route();syncMusicBtn();
 </script>
 </body>

@@ -925,43 +925,226 @@ function retell(orig,o){
 function lowFirstSafe(t){return t.charAt(0).toLowerCase()+t.slice(1)}
 /* the same facts, said a different way every game */
 const REPHRASE=[
- [/^I was with (.+?) in the (.+?) from (.+?) till (.+?)\. We were (.+?)\. Never left the room\./,[
+ [/^I was with ([^,.?!]+?) in the ([^,.?!]+?) from ([^,.?!]+?) till ([^,.?!]+?)\. We were ([^,.?!]+?)\. Never left the room\./,[
    m=>`${m[1]} and I were in the ${m[2]} from ${m[3]} to ${m[4]}. We were ${m[5]}. Didn't leave once.`,
    m=>`From ${m[3]} till ${m[4]} I was in the ${m[2]} with ${m[1]}. We were ${m[5]}, and nobody stepped out.`,
    m=>`Ask ${m[1]} — we were in the ${m[2]}, ${m[3]} to ${m[4]}, ${m[5]}. We stayed put the whole time.`]],
- [/^I was with (.+?) in the (.+?) from (.+?) till (.+?)\. We were (.+?)\./,[
-   m=>`${m[1]} and I were in the ${m[2]} from ${m[3]} to ${m[4]}. We were ${m[5]}.`,
+ [/^I was with ([^,.?!]+?) in the ([^,.?!]+?) from ([^,.?!]+?) till ([^,.?!]+?)\. We were ([^,.?!]+?)\./,[
+   m=>`{I was with ${m[1]}|${m[1]} and I were together|${m[1]} and I stuck together} in the ${m[2]}{ from| between} ${m[3]} {and|till|until} ${m[4]}. {We were|We'd been|Mostly we were} ${m[5]}.`,
+   m=>`${m[1]} and I {were|stayed|sat} in the ${m[2]} {from|between} ${m[3]} {to|and|till} ${m[4]}. {We were|Mostly we were} ${m[5]}.`,
    m=>`From ${m[3]} till ${m[4]} I was in the ${m[2]} with ${m[1]}. We were ${m[5]}.`,
    m=>`I spent ${m[3]} to ${m[4]} in the ${m[2]} with ${m[1]} — we were ${m[5]}.`,
-   m=>`${m[1]} can tell you. ${m[3]} till ${m[4]}, the two of us, in the ${m[2]}. We were ${m[5]}.`]],
- [/^I was with (.+?) in the (.+?) from (.+?) till (.+?)\. /,[
+   m=>`{Ask|${m[1]} can tell you|Check with} ${m[1]}{.|:} {${m[3]} till ${m[4]}|${m[3]} to ${m[4]}|from ${m[3]} on, till ${m[4]}}, {the two of us|just us two|both of us}{, in the| in the| — the} ${m[2]}. {We were|We'd been} ${m[5]}.`]],
+ [/^I was with ([^,.?!]+?) in the ([^,.?!]+?) from ([^,.?!]+?) till ([^,.?!]+?)\. /,[
    m=>`${m[1]} and I were in the ${m[2]} from ${m[3]} to ${m[4]}. `,
    m=>`From ${m[3]} till ${m[4]} I was in the ${m[2]} with ${m[1]}. `]],
- [/^I was in the (.+?) the whole time, (.+?) till (.+?)\. Just me and a book\./,[
+ [/^I was in the ([^,.?!]+?) the whole time, (\d+:\d+ [AP]M) till (\d+:\d+ [AP]M)\. Just me and a book\./,[
+   m=>`{I stayed|I was|I sat} in the ${m[1]} {from|between} ${m[2]} {and|till|until} ${m[3]}, {reading|with a book|buried in a novel|reading a mystery, ironically}{.|, alone.|. Nobody came in.}`,
    m=>`I never left the ${m[1]}. ${m[2]} to ${m[3]}, just me and a book.`,
    m=>`From ${m[2]} until ${m[3]} I was in the ${m[1]}, reading. Alone.`,
    m=>`The ${m[1]}. ${m[2]} till ${m[3]}. I had a book and nobody bothered me.`,
    m=>`I curled up in the ${m[1]} with a novel around ${m[2]} and didn't move till ${m[3]}.`]],
- [/^I was in the (.+?) the whole time, (.+?) till (.+?), cleaning up after dinner\./,[
+ [/^I was in the ([^,.?!]+?) the whole time, (\d+:\d+ [AP]M) till (\d+:\d+ [AP]M), cleaning up after dinner\./,[
    m=>`Kitchen duty. I was in the ${m[1]} from ${m[2]} till ${m[3]}, scrubbing pots after dinner.`,
    m=>`After dinner I cleaned up in the ${m[1]} — ${m[2]} to ${m[3]}. Somebody has to.`,
    m=>`${m[2]} till ${m[3]}, I was in the ${m[1]} doing the dishes. Mountains of them.`]],
- [/^I was in my room — the (.+?) — from (.+?)\. Asleep, mostly, until all the shouting\./,[
+ [/^I was in my room — the ([^,.?!]+?) — from (\d+:\d+ [AP]M)\. Asleep, mostly, until all the shouting\./,[
    m=>`I went up to the ${m[1]} around ${m[2]} and fell asleep. Then the shouting woke me.`,
    m=>`I was in the ${m[1]} from ${m[2]}. Dead to the world until everyone started yelling.`,
    m=>`Bed. The ${m[1]}, from about ${m[2]}. I slept through most of it, until the screaming.`]],
- [/^Yeah, (.+?) and I were in the (.+?) together, (.+?)\./,[
+ [/^Yeah, ([^,.?!]+?) and I were in the ([^,.?!]+?) together, ([^,.?!]+?)\./,[
+   m=>`{Yes|Yeah|Sure}, ${m[1]} and I {were|stayed|spent the evening} {together |}in the ${m[2]}{,|, just} ${m[3]}.`,
    m=>`${m[1]} and I were together in the ${m[2]}, ${m[3]}.`,
    m=>`I was in the ${m[2]} with ${m[1]}, ${m[3]}.`,
-   m=>`Me and ${m[1]}? ${m[2]}. We were ${m[3].replace(/^(playing|talking|having|watching|going|doing)/,'$1')}.`]],
- [/ Around (\d+:\d+ [AP]M), we both heard (.+?)\./,[
+   m=>`Me and ${m[1]}? The ${m[2]}. We were ${m[3].replace(/^(playing|talking|having|watching|going|doing)/,'$1')}.`]],
+ [/ Around (\d+:\d+ [AP]M), we both heard ([^.?!]+?)\./,[
+   m=>` {Around|About|At roughly} ${m[1]}, {we both|the two of us|both of us} {heard|caught} ${m[2]}{.| — clear as day.|. We looked at each other.}`,
    m=>` At about ${m[1]} we both heard ${m[2]}.`,m=>` Around ${m[1]}, the two of us heard ${m[2]}.`,m=>` We both heard ${m[2]} — around ${m[1]}, I'd say.`]],
- [/ Around (\d+:\d+ [AP]M), I heard (.+?)\./,[
+ [/ Around (\d+:\d+ [AP]M), I heard ([^.?!]+?)\./,[
+   m=>` {Around|About|At roughly|Close to} ${m[1]}, I {heard|caught|picked up} ${m[2]}{.|. Made me jump.|. I didn't think much of it then.}`,
    m=>` At about ${m[1]} I heard ${m[2]}.`,m=>` I remember hearing ${m[2]} around ${m[1]}.`,m=>` Around ${m[1]} there was ${m[2].replace(/^(a|an) /,'this ')} — I heard it.`]],
- [/ At like (\d+:\d+ [AP]M), I heard (.+?)\./,[
+ [/ At like (\d+:\d+ [AP]M), I heard ([^.?!]+?)\./,[
    m=>` Right around ${m[1]}, I heard ${m[2]}.`,m=>` I heard ${m[2]} at maybe ${m[1]}.`]],
 ];
-function rephrase(t,rr){REPHRASE.forEach(([re,vs])=>{const m=t.match(re);if(m&&rr.chance(.8)){t=t.replace(re,rr.pick(vs)(m))}});return t}
+function rephrase(t,rr){REPHRASE.forEach(([re,vs])=>{const m=t.match(re);if(m&&rr.chance(.85)){const out=slots(rr.pick(vs)(m),rr);t=t.replace(re,()=>out)}});return t}
+/* =====================================================================
+   VARIETY ENGINE — the same facts, never said the same way twice.
+   Everything is seeded by the case code, so every phone in a room
+   still reads exactly the same words.
+   ===================================================================== */
+const PERS_X={
+ nervous:{open:["Okay. Okay. I can do this. ","Sorry, I'm — sorry. ","I've never talked to police before. ","Can I have some water first? Never mind. ","My heart's still racing. ","I'll try to get this right. ","Uh — where do I start. ","Please don't write down that I'm shaking. "],
+  close:[" Is that okay?"," I think that's everything."," Did I say something wrong?"," Sorry. That's all I've got."," Can I sit down?"," That's the truth, I swear."," I'm sorry, I'm rambling."],
+  talk:["Every time a door closes I jump. Is that normal?","I keep saying sorry. I don't even know why.","I didn't sleep. I couldn't. Not after seeing that.","What if they think it was me? I couldn't hurt anyone.","My mind keeps going blank. Ask me again tomorrow?"]},
+ arrogant:{open:["Let's keep this brief. ","I've already explained this to your colleague. ","Listen carefully, because I won't repeat it. ","For someone of my standing, this is absurd. ","Very well. ","You'll find I'm the reliable one here. "],
+  close:[" Are we finished?"," I have people waiting."," Try to keep up."," That should settle it."," I expect an apology later."],
+  talk:["My lawyer will hear about how long this is taking.","I'm not used to being questioned. I'm used to asking.","If I wanted someone gone, I'd buy their company, not kill them.","You're out of your depth here. No offense."]},
+ cold:{open:["Facts only. ","Here it is. ","No speeches. ","Ask, then. ","Plainly: "],
+  close:[" Nothing more."," That's the full account."," Done."," Move on."],
+  talk:["I don't grieve in public.","Sentiment is wasted on the dead.","I noticed everything. I just don't react.","Ask your questions. Skip the sympathy."]},
+ charming:{open:["Detective! A pleasure, despite everything. ","Please, sit — you look exhausted. ","Ask me anything, darling, I'm an open book. ","What a night to meet you. ","Let me make this easy for you. "],
+  close:[" Shall I fetch you a coffee?"," Do come back if you need me."," I hope that helps, truly."," Lovely talking to you, under the circumstances."],
+  talk:["I'm told I talk too much. Stop me whenever.","You have kind eyes for a detective. Rare.","I'll help however I can. I owe {V} that much.","Everyone tells me their secrets. Occupational hazard of being likeable."]},
+ grieving:{open:["I'm sorry, this is hard. ","I keep expecting them to walk back in. ","Give me a moment. Okay. ","It doesn't feel real yet. ","I've been crying since it happened. "],
+  close:[" I just want this to be over."," I should've stayed closer."," Find who did this."," Sorry. I need air."],
+  talk:["{V} left a coat on the chair. I can't bring myself to move it.","I keep reading our last messages.","Everyone's talking about alibis. I'm thinking about the funeral.","Tell me it was quick. Please."]},
+ blunt:{open:["Here's what happened. ","Short version: ","No dancing around it: ","Write this down: ","Plain and simple: "],
+  close:[" That's it."," Nothing else to add."," Believe it or don't."," End of story."],
+  talk:["I'm not sad and I'm not pretending to be.","I've got nothing to hide, so ask what you want.","You want the truth or a nice story? I only do one.","I told {V} off a hundred times. Never laid a finger on {V}."]},
+ sarcastic:{open:["Oh good, round two. ","Ah yes, my favorite activity. ","Let me guess — where was I? ","Thrilling. Okay. ","Wonderful evening, isn't it? "],
+  close:[" Shocking, I know."," Try not to faint."," Gripping, right?"," Five stars, would be questioned again."],
+  talk:["Love how everyone's suddenly a detective.","Next you'll ask what I had for dessert. It was cake. Arrest me.","Oh sure, the person with the worst alibi is always the obvious one. That's how books work.","I'd say I'm hurt, but I'm mostly bored."]},
+ formal:{open:["Allow me to be precise. ","For the avoidance of doubt, ","To state it clearly, ","Respectfully, ","As accurately as I am able, "],
+  close:[" I hope this is of use."," I remain at your disposal."," That concludes my account."," I have nothing further to add."],
+  talk:["I find this whole affair deeply regrettable.","I have nothing to conceal and every reason to cooperate.","I shall answer any question put to me properly.","Decorum has rather gone out of the window tonight."]},
+ paranoid:{open:["Close the door first. ","Are they listening? ","I'll talk, but not loudly. ","Did someone tell you to ask me that? ","Keep your voice down. "],
+  close:[" Watch your back in this house."," Don't trust the quiet ones."," Somebody's covering for somebody."," I'm locking my door tonight."],
+  talk:["Someone moved my things before you got here. I know they did.","Phones can be tapped, you know. Just saying.","Whoever did this is still in the building. Think about that.","I've seen how people look at me. Like I'm next."]},
+ hotheaded:{open:["Fine! ","Seriously? Again? ","Listen, and listen good. ","I'll tell you, but I'm sick of this. ","Okay, here, happy? "],
+  close:[" And stop staring at me."," Done? Good."," Now go bother someone else."," That's all you're getting."],
+  talk:["I punched a wall earlier. Not a person. A wall.","Everyone's whispering about me. Say it to my face.","I've got a temper. Doesn't make me a killer.","One more accusation and I'm walking out."]},
+ quiet:{open:["...","Okay. ","Mm. ","Um, ",""],close:[""," ...That's all."," ...Sorry."," Yes."],
+  talk:["...I don't like crowds.","I noticed things. I just didn't say them.","...Is it okay if I don't look at the body again?","People forget I'm in the room. It's easier that way."]},
+ cheerful:{open:["Hi! Okay! ","Ooh, my turn! ","Right then! ","Happy to help! ","Okay, ready! "],
+  close:[" Isn't that something?"," Golly, what a mess."," I hope that helps!"," Ask me anything else!"],
+  talk:["I baked cookies this morning. Feels like a hundred years ago.","Sorry, I smile when I'm scared!","We'll figure it out! Teamwork!","I talk to everyone! So I sort of know everything."]},
+ weary:{open:["Here we go. ","Fine, one more time. ","Long day. Longer night. ","I'm running on fumes. ","Okay. Slowly. "],
+  close:[" Can I sit now?"," I'm going to need coffee."," That's the lot."," I've had about enough today."],
+  talk:["I've seen a lot of bad nights. This is the worst.","My feet hurt and somebody's dead. Some evening.","I'll help. I just don't have much left in me.","Nobody notices staff. That's how we hear everything."]},
+ smug:{open:["How delightful. ","Oh, you've come to me. Wise. ","I wondered when you'd get to me. ","Let me enlighten you. ","Of course it's me you need. "],
+  close:[" You'll thank me later."," Do keep up."," Elementary, really."," I'll be here when you work it out."],
+  talk:["I spotted three lies before dessert.","People underestimate me. I enjoy it.","I knew something was off the moment I arrived.","Ask me nicely and I might share what I noticed."]}};
+Object.keys(PERS_X).forEach(k=>{if(!PERS[k])return;['open','close','talk'].forEach(f=>{PERS[k][f]=PERS[k][f].concat(PERS_X[k][f])})});
+
+/* room-type details: harmless color, no times, no people, no sounds */
+const ROOMCOLOR={
+ kitchen:['The kitchen still smelled of garlic and burnt sugar.','The tiles were sticky — someone had spilled wine earlier.','I wiped the same counter three times, just to keep my hands busy.','The fridge door kept swinging open on its own.'],
+ dining:['The candles had burned right down to stubs.','The tablecloth was ruined — red wine everywhere.','There was still half a cake on the table.','The chairs were all pushed back like people left in a hurry.'],
+ lounge:['The fire had almost gone out.','The sofa cushions were a mess from earlier.','Someone had left their shoes by the armchair.','It was the only warm room in the place.'],
+ library:['That room smells like old paper and pipe smoke.','The reading lamp kept flickering.','Half the books on that shelf are fake, by the way.','I sat in the big green armchair by the window.'],
+ study:['The desk was covered in papers.','The window in there doesn\'t close all the way.','The chair in there creaks if you breathe on it.','There\'s a globe that doesn\'t spin anymore.'],
+ office:['The office was freezing — the heating never reaches it.','The desk drawers were all shut, as far as I saw.','The blinds were half down.','Stacks of files everywhere. Nothing new there.'],
+ music:['The piano lid was open.','Sheet music was scattered on the floor.','The room smelled of polish.','There\'s a cello in the corner nobody plays.'],
+ games:['The pool table felt was torn in one corner.','Somebody had left a cue on the floor.','The score was still chalked on the board from earlier.','The dartboard has a hole the size of a fist.'],
+ bed:['The bed wasn\'t made — that\'s on me.','The curtains were drawn the whole time.','I had my shoes off, if that matters.','My phone was charging on the nightstand.'],
+ bath:['The mirror was all fogged up.','The tap drips. Has for months.','Someone had left a towel on the floor.'],
+ garage:['It smells like oil and old tires in there.','The light in there buzzes and flickers.','There were boxes stacked everywhere.'],
+ cellar:['It\'s cold down there. Damp, too.','The bulb is barely bright enough to read labels.','Cobwebs everywhere — nobody cleans down there.'],
+ bar:['The ice bucket had melted to water.','Someone had left a cigar burning in the ashtray.','The bar stools were all knocked crooked.'],
+ lobby:['The lobby lights were dimmed.','The front desk was a mess of papers.','There was a pile of wet umbrellas by the door.'],
+ conference:['The whiteboard still had numbers from a meeting.','Half-empty coffee cups everywhere.','The projector was still warm.'],
+ chapel:['Candles were still lit in there.','It\'s always cold in the chapel.','The pews creak, so I barely moved.'],
+ balcony:['The railing was wet.','The view was something, I\'ll give it that.','I had my coat on — it was freezing out there.'],
+ terrace:['The chairs out there were damp.','The lanterns were still on.','The plants out there need watering, honestly.'],
+ grounds:['The grass was soaked.','I walked the path by the hedges.','My shoes were ruined by the end.']};
+const PERS_SLOT={
+ nervous:{o:['{Sorry|Um|Okay|Oh god}. {I’m shaking|Give me a second|I’m not good at this|This is a lot|My mind’s all over the place}. ',''],c:[' {Is that okay|Is that enough|Can I go now|Did I get that right}?',' {Sorry, that’s all|I’m sorry, that’s everything|That’s all I remember}.','']},
+ arrogant:{o:['{Listen|Let’s be quick|Pay attention|For the record}. {I’ll say this once|I’ve explained this already|This is beneath me}. ',''],c:[' {Write that down|Next question|Try to keep up}.',' Are we done?','']},
+ cold:{o:['{Fine|Facts only|Here it is}. ',''],c:[' {That’s all|Nothing more|Done|That’s the account}.','']},
+ charming:{o:['{Detective|Darling}! {Happy to help|Anything for you|Ask away|A pleasure, despite all this}. ','Of course, of course. ',''],c:[' {Anything else I can do|Can I get you a drink|Shall I fetch you a coffee}?',' {Do come back anytime|I hope that helps}.','']},
+ grieving:{o:['{Sorry|Give me a moment|It doesn’t feel real|I still can’t believe it}. ',''],c:[' {I keep thinking I could’ve done something|I just want this over|Please find who did this|I need some air}.','']},
+ blunt:{o:['{Straight answer|Short version|Plainly|Here it is}: ',''],c:[' {Simple as that|That’s it|End of story|Believe it or don’t}.','']},
+ sarcastic:{o:['{Oh great|Wonderful|Fantastic|Lovely}, {this again|round two|my favorite part}. ',''],c:[' {Riveting|Thrilling|Gripping|Shocking} stuff, I know.',' {Gripping|Thrilling}, right?','']},
+ formal:{o:['{If I may|For your records|Respectfully|To be precise}, ',''],c:[' {I trust that is sufficient|I remain at your disposal|That concludes my account|I have nothing further to add}.','']},
+ paranoid:{o:['{Is this being recorded|Who else have you talked to|Is the door shut|Are they listening}? {Fine|Never mind|Okay}. ',''],c:[' Someone in this house is lying, and it isn’t me.',' {Watch your back|Don’t trust anyone here|Somebody’s covering for somebody}.','']},
+ hotheaded:{o:['{Ugh. Fine|Seriously? Again|Fine! Listen|You want to know where I was}{.|?} ',''],c:[' {Don’t look at me like that|Now leave me alone|That’s all you get|Go bother someone else}.','']},
+ quiet:{o:['','{Um|Okay}. '],c:['',' {...That’s all|...Sorry}.']},
+ cheerful:{o:['{Oh|Ooh|Okay|Sure thing}! {My turn|Ready|Happy to help}! ',''],c:[' {Gosh|Golly|Wow}, {what a night|what a mess}!','']},
+ weary:{o:['{Long night|Alright|Fine, again|Okay, slowly}. ',''],c:[' I’d like to sleep now, if that’s allowed.',' {I could use a coffee|That’s the lot|I’m done in}.',' Can I sit down now?','']},
+ smug:{o:['{Ah, the detective|Well, well|How delightful|Finally, someone asks me}. ',''],c:[' {You’re welcome|Do keep up|You’ll thank me later|Elementary, really}.','']}};
+function persOpen(pers,rr){const P=PERS_SLOT[pers];return P?slots(rr.pick(P.o),rr):''}
+function persClose(pers,rr){const P=PERS_SLOT[pers];return P?slots(rr.pick(P.c),rr):''}
+function colorLine(type,rr){const p=ROOMCOLOR[type];if(!p||!rr.chance(.55))return '';const pre=rr.pick(['','','Funny thing — ','For what it\'s worth, ','I remember ']);let l=rr.pick(p);if(pre&&!/^I\b/.test(l))l=l.charAt(0).toLowerCase()+l.slice(1);return ' '+pre+l}
+
+/* most-repeated sentences, each with many ways to say it */
+const T_=String.raw`(\d+:\d+ [AP]M)`;
+const PARA=[
+ [new RegExp(String.raw`Last time I saw ([^,.?!]+?) was around ${T_} — heading to the ([^,.?!]+?)\.`),[m=>`{I last saw|The last I saw of|Last I saw} ${m[1]} {was |}{around|about|at roughly} ${m[2]}, {walking|heading|going|on the way} {toward|to} the ${m[3]}.`,m=>`{Around|About|Close to} ${m[2]}, ${m[1]} {went past me|walked by|brushed past me}{ — headed| on the way| going} to the ${m[3]}. {That was the last time I saw ${m[1]}.|Never saw ${m[1]} alive again.|I didn't see ${m[1]} after that.}`,m=>`I last saw ${m[1]} around ${m[2]}, walking toward the ${m[3]}.`,m=>`The last time I laid eyes on ${m[1]} was about ${m[2]} — ${m[1]} was going to the ${m[3]}.`,m=>`Around ${m[2]} I saw ${m[1]} head off to the ${m[3]}. That was the last time.`,m=>`${m[1]} passed me around ${m[2]}, on the way to the ${m[3]}. Never saw ${m[1]} again.`,m=>`Last sighting, for me: ${m[1]}, ${m[2]}, going toward the ${m[3]}.`]],
+ [new RegExp(String.raw`I'm the one who found ([^,.?!]+?), at ${T_}, in the ([^,.?!]+?)\.`),[m=>`{I was the one who|I'm the one who|It was me who} {found|discovered|came across} ${m[1]}{ — | — it was }${m[2]}{, in the|, the| in the} ${m[3]}.{| I won't forget it.| I can't stop seeing it.| I screamed, I think.| My legs just gave out.}`,m=>`{At|Around|Right at} ${m[2]} I {walked|went|stepped} into the ${m[3]} and {found|saw|there was} ${m[1]}.{| On the floor.| Not moving.| I knew right away.}`,m=>`I was the first to find ${m[1]}, in the ${m[3]}, around ${m[2]}.`]],
+ [/I didn't see anything\./,[()=>`{I didn't see a thing.|Saw nothing.|I didn't notice a thing.|Nothing caught my eye.|I saw nothing worth mentioning.}`,()=>`Saw nothing. Sorry.`,()=>`Nothing caught my eye.`,()=>`I didn't notice anything at all.`,()=>`Didn't see anything out of the ordinary.`]],
+ [/Didn't hear or see anything weird\./,[()=>`{Nothing strange|Nothing odd|Nothing out of place|Nothing unusual}{, as far as I noticed| that I noticed| that I can remember|, honestly}.`,()=>`I didn't hear or see anything odd.`,()=>`Didn't notice anything off.`,()=>`Nothing unusual reached me.`,()=>`Not a thing seemed wrong.`]],
+ [/I (?:really )?(?:don't|didn't) want to get involved\./,[()=>`{I'd rather|I really want to|I'd prefer to} stay out of {this|all this|it}{.|, honestly.}`,()=>`I don't want any part of this.`,()=>`Please keep me out of it.`,()=>`I really didn't want to be dragged into this.`]],
+ [new RegExp(String.raw`Oh — and I saw ([^,.?!]+?) in the ([^,.?!]+?) around ${T_}\.`),[m=>`Oh, one more thing — I saw ${m[1]} in the ${m[2]} around ${m[3]}.`,m=>`Also: ${m[1]} was in the ${m[2]} at about ${m[3]}. I saw ${m[1]} there.`,m=>`Funny, I just remembered — ${m[1]}, in the ${m[2]}, around ${m[3]}.`,m=>`And I spotted ${m[1]} in the ${m[2]} around ${m[3]}, if that helps.`]],
+ [/I never went anywhere near the ([^,.?!]+?)\./,[m=>`I didn't go near the ${m[1]}.`,m=>`I was nowhere near the ${m[1]}.`,m=>`The ${m[1]}? Never set foot in it.`,m=>`I stayed well away from the ${m[1]}.`]],
+ [/I'm pretty sure of the time\./,[()=>`I'm fairly certain about the time.`,()=>`I checked the time, I think.`,()=>`Pretty sure that's right.`,()=>`I'd bet on that time.`]],
+ [/We were (playing cards|catching up about old times|looking through old family photos|playing a really long game of chess|arguing about money|planning tomorrow's big announcement|going over the company's money stuff)\./,[m=>`{We were|We'd been|Mostly we were|We spent the time} ${m[1]}{.|, mostly.|, if you must know.|. Nothing exciting.}`,m=>`${cap(m[1])}, mostly.`,m=>`Just ${m[1]}.`,m=>`We spent it ${m[1]}.`]],
+ [/And yes, I called ([^,.?!]+?) around (\d+:\d+ [AP]M)\. About tomorrow\. (He|She) sounded fine\. Distracted, maybe\./,[m=>`{And yes|Yes|Okay, yes} — I {phoned|called|rang} ${m[1]} {around|about|at roughly} ${m[2]}. {About plans for tomorrow|Something about tomorrow|Just tomorrow's schedule|Small stuff, tomorrow's plans}. ${m[3]} {seemed fine|sounded normal|sounded okay}{, maybe a bit distracted|, a little distant| — just distracted|}.`,m=>`{The call at ${m[2]}?|That ${m[2]} call?|The call around ${m[2]}?} {Me|That was me|Yes, mine}. {Just about tomorrow|Tomorrow's plans, nothing more|Boring stuff about tomorrow}. ${m[1]} {sounded fine|seemed okay|was fine} — {preoccupied|distracted|a bit far away}, {maybe|I think|if anything}.`]],
+ [/[Tt]he time\? Honestly\.\.\. the clock in there is always wrong\. Could have been later\. I just assumed\./,[()=>`{The time?|About the time —|Okay, the time.} {That clock|The clock in there} {is always off|runs slow|has never been right}. {It might've been later|Could easily have been later|It was probably later}. {I just went by it.|I didn't check my phone.|I assumed it was right.}`,()=>`The time? That clock is always off. It might've been later. I just went by it.`,()=>`Honestly, I went by the clock in there, and it's never right. Could've been later.`,()=>`I might've got the time wrong. That clock runs slow. I didn't check my phone.`]],
+ [new RegExp(String.raw`[Ee]arlier, around ${T_}, I saw ([^,.?!]+?) near the stairs\. Probably nothing — that was way before\.`),[m=>`{Way earlier|Much earlier|Long before that} — {around|about} ${m[1]} — I {saw|spotted|noticed} ${m[2]} {by|near|on} the stairs. {Probably means nothing.|Probably nothing.|Doubt it matters.|That was ages before, though.}`,m=>`I did see ${m[2]} near the stairs, but that was around ${m[1]}. Long before.`,m=>`Around ${m[1]} ${m[2]} was hanging around the stairs. Ages before anything happened.`]],
+ [/([^,.?!]+?) was with me, yes\. Kept checking the clock, actually\. Kept saying the time out loud\. Weird\./,[m=>`Yes, ${m[1]} was with me. Kept looking at the clock. Kept announcing the time, too. Odd.`,m=>`${m[1]}? With me the whole time. Strange, though — ${m[1]} kept checking the clock and saying the time out loud.`,m=>`I can vouch for ${m[1]}. Weirdly, ${m[1]} kept telling me what time it was. Over and over.`]],
+ [/([^,.?!]+?) never left my sight\./,[m=>`${m[1]} was right next to me the whole time.`,m=>`I never lost sight of ${m[1]}.`,m=>`${m[1]} didn't go anywhere. I'd have noticed.`,m=>`${m[1]} was with me every second.`]],
+ [new RegExp(String.raw`Around ${T_}, I saw ([^,.?!]+?) in the hall, heading toward the ([^,.?!]+?)\.`),[m=>`About ${m[1]}, I saw ${m[2]} in the hallway, going toward the ${m[3]}.`,m=>`${m[2]} went past me in the hall around ${m[1]} — toward the ${m[3]}.`,m=>`I spotted ${m[2]} in the corridor at around ${m[1]}, heading for the ${m[3]}.`]],
+ [/Had to flip the light on to find it\./,[()=>`It was dark — I had to switch the light on.`,()=>`The light was off, so I flicked it on.`,()=>`Couldn't see a thing until I turned the light on.`]],
+ [/Nobody was in there — the lights were off\./,[()=>`{Nobody was in there|The room was empty|Not a soul in there}{ — | and }{the lights were off|it was dark|the lamps were off}.`]],
+ [/I stayed there a while longer\./,[()=>`{I stayed there|I hung around|I stayed put} {a while longer|a bit more|for a while after}.`]],
+ [/([^,.?!]+?) was winning, if you must know\./,[m=>`${m[1]} was {winning|ahead|beating me}{, if you must know|, for the record|, sadly}.`]],
+ [/Only ([^,.?!]+?) was in there\./,[m=>`Just ${m[1]} in there.`,m=>`${m[1]} was the only one there.`,m=>`Nobody but ${m[1]}.`]],
+ [/We barely know each other\./,[()=>`We hardly know each other.`,()=>`We're practically strangers.`,()=>`I've barely spoken to them before.`]],
+ [/Nobody was there\./,[()=>`Nobody was in there.`,()=>`The room was empty.`,()=>`Not a soul.`]],
+ [/([^,.?!]+?) and I were together the whole time\. We'll say the same thing because it's the truth\./,[m=>`${m[1]} and I were together the entire time. Our stories match because they're true.`,m=>`I was with ${m[1]} all along. Of course we'll say the same thing — it happened.`,m=>`${m[1]} and I never split up. Same story, because it's the truth.`]],
+ /* evidence */
+ [new RegExp(String.raw`^([^,.?!]+?) died between ${T_} and ${T_}\.`),[m=>`{Time of death|Estimated time of death|Death}{: | — }{between ${m[2]} and ${m[3]}|${m[2]} to ${m[3]}|somewhere from ${m[2]} to ${m[3]}}.`,m=>`The coroner puts ${m[1]}'s death between ${m[2]} and ${m[3]}.`,m=>`${m[1]} died sometime from ${m[2]} to ${m[3]}.`,m=>`Estimated time of death for ${m[1]}: ${m[2]}–${m[3]}.`,m=>`Death occurred between ${m[2]} and ${m[3]}, by the coroner's estimate.`]],
+ [new RegExp(String.raw`One last call: incoming, ${T_}, 2 minutes, from ([^,.?!]+?)'s number\.`),[m=>`{Final|Last} {call|incoming call} {logged|received|on record}{ at| —} ${m[1]}, {two minutes|2 minutes long|lasting two minutes}, from ${m[2]}'s {phone|number|mobile}.`,m=>`The last call in the log: ${m[1]}, incoming, 2 minutes — ${m[2]}'s number.`,m=>`${m[2]}'s number called at ${m[1]}. Two minutes. Nothing after that.`,m=>`Last activity: a 2-minute incoming call from ${m[2]} at ${m[1]}.`]],
+ [/One camera covers the ([^,.?!]+?)\./,[m=>`There's a single camera on the ${m[1]}.`,m=>`Only the ${m[1]} is on camera.`,m=>`The one working camera points at the ${m[1]}.`]],
+ [new RegExp(String.raw`The power went out from ${T_} to ${T_}\.`),[m=>`Power was cut from ${m[1]} until ${m[2]}.`,m=>`Outage logged: ${m[1]} to ${m[2]}.`,m=>`The building had no power between ${m[1]} and ${m[2]}.`,m=>`Lights out from ${m[1]} till ${m[2]}.`]],
+ [/No fault on the grid — the main breaker inside was switched off by hand\./,[()=>`The grid was fine. Someone flipped the main breaker inside, by hand.`,()=>`Not a grid problem: the main breaker was turned off manually.`,()=>`The power company found no fault — the breaker inside was switched off on purpose.`]],
+ [/No usable prints\. No DNA but ([^,.?!]+?)'s\. Whoever planned this knew how to leave nothing behind\./,[m=>`Not one usable print. Only ${m[1]}'s DNA. Whoever did this was careful.`,m=>`The scene is clean: no prints worth anything, no DNA except ${m[1]}'s. This was planned.`,m=>`Prints: none usable. DNA: ${m[1]}'s only. Someone knew exactly what they were doing.`]],
+ [/Most results came back inconclusive\. Too many people in and out of the building tonight\./,[()=>`Results are mostly inconclusive — too many people came and went tonight.`,()=>`Nothing conclusive. The building was full of people all evening.`,()=>`The lab can't separate anyone out. Too much traffic in and out tonight.`]],
+ [/Lividity doesn't match how ([^,.?!]+?) was lying\. The body was moved after death\./,[m=>`The lividity is wrong for how ${m[1]} was found. ${m[1]} was moved after dying.`,m=>`Blood pooling says ${m[1]} died in a different position. The body was moved.`,m=>`${m[1]} didn't die where ${m[1]} was found — lividity proves the body was moved.`]],
+ [new RegExp(String.raw`Phone records show ([^,.?!]+?) on one non-stop call from ${T_} to ${T_}\.`),[m=>`${m[1]}'s phone was on a single unbroken call from ${m[2]} to ${m[3]}.`,m=>`The carrier logs ${m[1]} on one call, ${m[2]} to ${m[3]}, no breaks.`,m=>`From ${m[2]} till ${m[3]}, ${m[1]} was on the phone without a pause.`]],
+ [/([^,.?!]+?)'s smartwatch logged (him|her) lying still, heart rate low, from (\d+:\d+ [AP]M) to (\d+:\d+ [AP]M)\./,[m=>`${m[1]}'s watch shows ${m[2]} resting, low heart rate, ${m[3]} to ${m[4]}.`,m=>`Sleep data from ${m[1]}'s watch: still and calm from ${m[3]} until ${m[4]}.`,m=>`${m[1]}'s smartwatch: no movement, slow pulse, ${m[3]}–${m[4]}.`]],
+];
+function slots(t,rr){return t.replace(/\{([^{}]*\|[^{}]*)\}/g,(m,a)=>rr.pick(a.split('|')))}
+function paraphrase(t,rr,p){p=p==null?.8:p;PARA.forEach(([re,vs])=>{const m=t.match(re);if(m&&rr.chance(p)){const out=slots(rr.pick(vs)(m),rr);t=t.replace(re,()=>out)}});return t}
+
+/* word-level variety: same meaning, different words */
+const SYN=[
+ [/\bthe whole time\b/g,['the entire time','the whole time','all along','start to finish']],
+ [/\breally\b/g,['really','truly','genuinely','honestly']],
+ [/\bweird\b/g,['weird','odd','strange','off']],
+ [/\bmaybe\b/g,['maybe','perhaps','possibly']],
+ [/\bI think\b/g,['I think','I believe','pretty sure','I reckon']],
+ [/\bnobody\b/g,['nobody','no one']],[/\bNobody\b/g,['Nobody','No one']],
+ [/\beveryone\b/g,['everyone','everybody']],
+ [/\btalking\b/g,['talking','chatting']],
+ [/\bcame back\b/g,['came back','got back','returned']],
+ [/\bI saw\b/g,['I saw','I spotted','I noticed']],
+ [/\babout\b(?= \d)/g,['about','around','roughly']],
+ [/\baround\b(?= \d)/g,['around','about','close to','roughly']],
+ [/\btill\b/g,['till','until','to']],
+ [/\bOkay\b/g,['Okay','Alright','Fine']],
+ [/\bactually\b/g,['actually','in fact','to be honest']],
+ [/\bguess\b/g,['guess','suppose']],
+ [/\bbig\b/g,['big','huge']],
+];
+function wordVary(t,rr,p){p=p||.4;SYN.forEach(([re,vs])=>{t=t.replace(re,w=>rr.chance(p)?rr.pick(vs):w)});return t}
+/* sometimes say times the way people talk */
+const NUMW2=['twelve','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+function sayTime(t,rr,p){return t.replace(/\b(\d{1,2}):(\d\d) ([AP]M)\b/g,(w,h,m,ap)=>{if(!rr.chance(p||.22))return w;h=+h;const nx=NUMW2[(h%12)+1],hw=NUMW2[h%12];
+  if(m==='00')return rr.pick([hw+" o'clock",hw+' sharp',h+' '+ap]);if(m==='30')return rr.pick(['half past '+hw,hw+'-thirty']);if(m==='15')return 'quarter past '+hw;if(m==='45')return 'quarter to '+nx;return h+':'+m})}
+/* a whole speech, varied: paraphrase → words → spoken times */
+function varySpeech(t,rr){if(!t)return t;return sayTime(wordVary(paraphrase(t,rr),rr),rr)}
+/* evidence: different report voices */
+const EVVOICE=['','','Lab says: ','Report: ','From the file — ','Officer\'s note: ','Analysts: ','Summary: ','Note: '];
+const EVSYN=[[/One shot, close range\./g,['One shot, close range.','A single gunshot, fired from very close.','Shot once, at point-blank range.']],[/(\w+) let the killer get very close\./g,['$1 let the killer get very close.','$1 knew the shooter well enough to let them near.','The killer was standing right next to $1.']],
+ [/One stab wound\./g,['One stab wound.','A single stab wound.','Stabbed once.']],[/No long struggle — it was over fast\./g,['No long struggle — it was over fast.','It was quick. Barely a struggle.','Over in seconds.']],
+ [/One heavy blow to the back of the head\./g,['One heavy blow to the back of the head.','A single hard blow to the back of the skull.','Struck once, hard, from behind.']],
+ [/Strangled from behind with something soft — a scarf or a tie\. Under a minute\./g,['Strangled from behind with something soft — a scarf or a tie. Under a minute.','Strangled from behind. Soft fibers — think scarf or tie. It took less than a minute.','Ligature strangulation, from behind, with fabric. Fast.']],
+ [/Suffocated — probably with a cushion\. Tiny bruises around the mouth\. A short struggle\./g,['Suffocated — probably with a cushion. Tiny bruises around the mouth. A short struggle.','Smothered, most likely with a cushion. Small bruises at the mouth. Brief struggle.','Death by suffocation. Faint bruising around the lips suggests a pillow or cushion.']],
+ [/Death came within minutes of drinking\./g,['Death came within minutes of drinking.','It killed within minutes of being swallowed.','Fatal within minutes of the first sip.']],
+ [/Whoever planned this knew how to leave nothing behind\./g,['Whoever planned this knew how to leave nothing behind.','Somebody cleaned up very carefully.','This was a careful killer.','Whoever did this knew forensics.']],
+ [/No DNA but (\w+)'s\./g,["No DNA but $1's.","Only $1's DNA.","The only DNA is $1's."]],
+ [/Could be meant to scare people off the real story\./g,['Could be meant to scare people off the real story.','Or a distraction from what really happened.','Maybe someone wants everyone looking the wrong way.']],
+ [/The cold makes the time of death hard to pin down — the body cooled faster than normal\. Don't lean on this window too hard\./g,['The cold makes the time of death hard to pin down — the body cooled faster than normal. Don\'t lean on this window too hard.','Cold conditions sped up cooling, so this window is unreliable.','Warning: the cold throws off the estimate. Treat this window as rough.']],
+ [/TONIGHT YOU PAY\./g,['TONIGHT YOU PAY.']],[/Letters cut from magazines\./g,['Letters cut from magazines.','Each letter cut from a magazine.','Cut-out magazine letters.']],[/What it caught:/g,['What it caught:','Footage shows:','On the recording:','The tape shows:','Recorded:']],[/guests arrive through the front door/g,['guests arrive through the front door','guests come in the front door','the guests arrive at the main entrance','arrivals at the front door']],
+ [/ crosses the /g,[' crosses the ',' walks through the ',' passes through the ',' is seen in the ']],[/black screen/g,['black screen','no signal','dead feed','nothing — camera offline']],
+ [/No usable prints\./g,['No usable prints.','Prints: nothing usable.','No clean prints anywhere.']],[/Most of the glass landed OUTSIDE\./g,['Most of the glass landed OUTSIDE.','The glass is mostly OUTSIDE.','Nearly all the glass fell OUTSIDE.']],
+ [/Could be a prank\./g,['Could be a prank.','Might be someone\'s idea of a joke.','Maybe just a prank.']],[/No prints on it\./g,['No prints on it.','Wiped clean.','Not a single print.']],
+ [/smashed/g,['smashed','broken','shattered']],[/right after the attack/g,['right after the attack','just after the attack','moments after the attack']]];
+function varyReport(x,rr){if(!x)return x;let t=paraphrase(x,rr,.85);EVSYN.forEach(([re,vs])=>{t=t.replace(re,(...a)=>rr.chance(.75)?rr.pick(vs).replace(/\$(\d)/g,(x,n)=>a[+n]):a[0])});t=wordVary(t,rr,.3);const v=rr.pick(EVVOICE);if(v&&!/^\W/.test(t))t=v+t;return t}
+
+const NOTHING_X=['Drawers, shelves, under the rug — nothing.','A stopped clock and a lot of dust. Nothing that matters.','Nothing here but old magazines.','You turn the room over. Nothing.','Someone tidied in here recently. Nothing left to find.','A coat on a hook, pockets empty.','Fingerprints everywhere — this room gets used all day. Useless.','A window latch, a dead fly, a lost earring back. Nothing useful.'];
+
 /* daytime cases: the same story, told for the afternoon */
 const DAYFIX=[[/\btonight\b/g,'today'],[/\bTonight\b/g,'Today'],[/\bthat night\b/g,'that day'],[/\bThat night\b/g,'That day'],[/\blast night\b/g,'yesterday'],
   [/\bat night\b/g,'in the afternoon'],[/\bevery night\b/g,'every day'],[/\bthe night\b/g,'the afternoon'],[/\bThe night\b/g,'The afternoon'],[/\ba night\b/g,'an afternoon'],[/\bnight\b/g,'afternoon'],[/\bNight\b/g,'Afternoon'],
@@ -970,7 +1153,11 @@ const DAYFIX=[[/\btonight\b/g,'today'],[/\bTonight\b/g,'Today'],[/\bthat night\b
 function dayify(x){if(typeof x==='string'){let t=x;DAYFIX.forEach(([a,b])=>t=t.replace(a,b));return t}
   if(Array.isArray(x))return x.map(dayify);if(x&&typeof x==='object'){const o={};for(const k in x)o[k]=(k==='layout'||k==='rooms'||k==='look'||k==='env'||k==='code'||k==='title'||k==='place'||k==='at')?x[k]:dayify(x[k]);return o}return x}
 function tidyTxt(x){if(typeof x==='string')return x.replace(/\b([Tt])he the\b/g,'$1he');if(Array.isArray(x))return x.map(tidyTxt);if(x&&typeof x==='object'){const o={};for(const k in x)o[k]=(k==='layout'||k==='rooms'||k==='look'||k==='env')?x[k]:tidyTxt(x[k]);return o}return x}
-function finishCase(c,day){c=tidyTxt(c);return day?dayify(c):c}
+function finishCase(c,day){
+  c.suspects.forEach((s,i)=>{const rr=mkR(hashStr('VS|'+c.code+'|'+i));s.statement=varySpeech(s.statement,rr);s.followup=varySpeech(s.followup,rr)});
+  c.evidence.forEach((e,k)=>{e.x=varyReport(e.x,mkR(hashStr('VE|'+c.code+'|'+k)))});
+  Object.keys(c.roomClues||{}).forEach(k=>{const rr=mkR(hashStr('VR|'+c.code+'|'+k));let t=c.roomClues[k];if(NOTHING.includes(t)&&rr.chance(.6))t=rr.pick(NOTHING_X);c.roomClues[k]=wordVary(paraphrase(t,rr,.8),rr,.3)});
+  c=tidyTxt(c);return day?dayify(c):c}
 /* ---------- the full case ---------- */
 function generateCase(code){
   const H=caseHeader(code),r=mkR(hashStr('TLN8|'+code));
@@ -1049,8 +1236,10 @@ function generateCase(code){
   const say=(i,core)=>{const s=sus[i],P=PERS[s.pers];let t=core;
     if(s.tic.s)t=s.tic.s+lowFirst(t);
     else if(/\?$/.test(t))t=t.slice(0,-1)+s.tic.e.replace(/\.$/,'?');else t=t.replace(/[.!]$/,'')+s.tic.e;
-    let op=r.pick(P.open);if(/,\s$/.test(op))t=lowFirst(t);
-    return(op+t+r.pick(P.close)).trim()};
+    let op=r.pick(P.open),cl=r.pick(P.close);const pr=mkR(hashStr('PO|'+code+'|'+i+'|'+core.length));
+    if(pr.chance(.75)){op=persOpen(s.pers,pr);cl=persClose(s.pers,pr)}
+    if(/,\s$/.test(op))t=lowFirst(t);
+    return(op+t+cl).trim()};
   const talk=i=>F(r.pick(PERS[sus[i].pers].talk));
 
   // ---- culprits ----
@@ -1180,7 +1369,7 @@ function generateCase(code){
     if(i===protector)st+=' Oh — and I saw '+sus[X].first+' in the '+roomName(claims[X])+' around '+fmt(T-3)+'. I\'m sure.';
     if(i===reluct)st+=' I didn\'t see anything. I really don\'t want to get involved.';
     if(i===finder)st+=' I\'m the one who found '+V+', at '+fmt(T+15)+', in the '+BR.label+'.';
-    s.statement=say(i,rephrase(st,mkR(hashStr('SAY|'+code+'|'+i))));s.alibi=alibi;s.claim={room:c.room,label:roomName(c),a:c.a,b:c.b,with:c.with||[]};
+    {const vr=mkR(hashStr('SAY|'+code+'|'+i));s.statement=say(i,rephrase(st,vr)+colorLine(RB[c.room]&&RB[c.room].type,vr))}s.alibi=alibi;s.claim={room:c.room,label:roomName(c),a:c.a,b:c.b,with:c.with||[]};
   });
   if(lastSeen>=0){facts.push({t:T-25,who:'V',room:murderId,stage:1,text:sus[lastSeen].first+' last sees '+V+' heading to the '+MR.label});sightings.push({room:murderId,i:lastSeen,stage:1,text:sus[lastSeen].first+' saw '+V+' heading here at '+fmt(T-25)})}
   if(finder>=0)facts.push({t:T+15,who:finder,room:bodyId,stage:1,text:sus[finder].first+' finds '+V+'\'s body in the '+BR.label});

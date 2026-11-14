@@ -6,7 +6,7 @@
 <title>NBA Playoff Bracket</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800;1,900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#080b13; --card:#121a2b; --card2:#18223a; --line:#26324d;
@@ -96,7 +96,7 @@ main[data-tab="N"] .panel.N, main[data-tab="P"] .panel.P{display:block}
 /* West | Finals | East — East always on the right, mirrored */
 .bscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px 8px;scroll-behavior:auto}
 main:not([data-tab="F"]) .bscroll, main:not([data-tab="F"]) .jump{display:none}
-.bwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px minmax(0,1fr);gap:26px;align-items:start;min-width:1180px}
+.bwrap{display:grid;grid-template-columns:minmax(0,1fr) 260px minmax(0,1fr);gap:24px;align-items:start;min-width:1120px}
 .panel.F{align-self:center;padding-top:150px}
 .panel.E .ph{flex-direction:row-reverse}
 .panel.E .rounds, .panel.E .rlabels{flex-direction:row-reverse}
@@ -412,17 +412,144 @@ footer{text-align:center;color:#4f5b75;font-size:12px;padding:10px 16px 30px}
   .bscroll{overflow:visible;margin:0;padding:0}
   .bwrap{min-width:0}
 }
+
+/* =================== BROADCAST THEME (reference layout) =================== */
+:root{--bg:#04060b;--card:rgba(12,16,28,.82);--card2:rgba(22,28,44,.9);--line:rgba(255,255,255,.12);
+  --or:#d81e3a;--or2:#ff5a6e;--gold:#f4c64e;--tx:#f3f5f9;--mut:#8f9ab0;--west:#c8102e;--east:#1d5bbf;--gap:26px;--stub:13px}
+body{background:
+  radial-gradient(70% 55% at -5% 25%, rgba(200,16,46,.55), transparent 70%),
+  radial-gradient(70% 55% at 105% 25%, rgba(29,91,191,.6), transparent 70%),
+  radial-gradient(50% 28% at 50% 0%, rgba(255,255,255,.10), transparent 75%),
+  radial-gradient(120% 60% at 50% 115%, rgba(255,255,255,.05), transparent 70%),
+  repeating-radial-gradient(circle at 50% 135%, rgba(255,255,255,.035) 0 1.5px, transparent 1.5px 7px),
+  var(--bg);background-attachment:fixed}
+header{border-bottom:1px solid rgba(255,255,255,.12);background:linear-gradient(90deg, rgba(200,16,46,.35), rgba(0,0,0,.25) 40%, rgba(0,0,0,.25) 60%, rgba(29,91,191,.4))}
+.hbg{position:absolute;inset:0;background:
+  radial-gradient(40% 120% at 50% 0%, rgba(255,255,255,.12), transparent 70%),
+  repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 2px, transparent 2px 22px)}
+.hin{justify-content:center;text-align:center;padding:26px 18px 20px}
+.htitle{flex:1 1 100%;display:flex;flex-direction:column;align-items:center}
+.kick{color:#c7cfdd;letter-spacing:.35em;font-size:12px}
+h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:64px;line-height:.92;letter-spacing:-.01em;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+h1 .pw{background:linear-gradient(180deg,#fff 40%,#c9d0dc);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 #yh{color:var(--gold)}
+.asof{color:#aeb7c8}
+.era{background:rgba(0,0,0,.35);color:#e9edf4;border-color:rgba(255,255,255,.2);letter-spacing:.14em}
+.hctl{margin:12px auto 0;max-width:520px;flex:1 1 100%;justify-content:center}
+.fld input,.fld select{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.18)}
+.fld select{color:#fff;border-color:rgba(255,255,255,.3)}
+.xpf{background:linear-gradient(90deg,var(--west),#fff 50%,var(--east));box-shadow:none}
+.xpt b{color:#fff}
+.btn{background:rgba(14,19,32,.85);border-color:rgba(255,255,255,.16);text-transform:uppercase;letter-spacing:.08em}
+.btn:hover{border-color:#fff}
+.btn.pri{background:#fff;border-color:#fff;color:#0a0d16}
+.myt{background:rgba(14,19,32,.85);border-color:rgba(255,255,255,.16)}
+.tabs{background:rgba(4,6,11,.88)}
+.tab{font-family:'Barlow Condensed';font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.06em}
+.tab.on{background:transparent;border-color:transparent;box-shadow:inset 0 -3px 0 #fff;color:#fff}
+.tab .cnt{background:var(--west);color:#fff}
+.jump button{background:rgba(14,19,32,.85);border-color:rgba(255,255,255,.16)}
+
+/* conference headers */
+.bwrap .ph h2{font-family:'Barlow Condensed';font-weight:900;font-style:italic;font-size:30px;line-height:.9;letter-spacing:.01em;color:#fff!important;text-shadow:0 3px 18px rgba(0,0,0,.7)}
+.panel.W .ph h2{text-shadow:0 0 28px rgba(200,16,46,.75)}
+.panel.E .ph h2{text-shadow:0 0 28px rgba(29,91,191,.85)}
+.panel.E .ph{text-align:right}
+.ph.fin{justify-content:center}
+.ph.fin h2{font-family:'Barlow Condensed';font-weight:900;font-style:italic;font-size:52px;color:#fff!important;display:flex;flex-direction:column;align-items:center;line-height:.85;text-shadow:0 0 30px rgba(244,198,78,.45)}
+.ph.fin h2 small{font-size:16px;letter-spacing:.3em;color:var(--gold);font-style:normal}
+.pc{color:#aab3c4}
+.rlabels span{font-family:'Barlow Condensed';font-weight:800;font-style:italic;color:#e8ecf3;font-size:12px;letter-spacing:.12em}
+
+/* connectors */
+.pair::after{border-color:rgba(255,255,255,.55)!important;border-width:1.5px;border-radius:0}
+.panel.E .pair::after{border-radius:0}
+.pair::before{border-top:1.5px solid rgba(255,255,255,.55)}
+
+/* matchup = two slots, no box */
+.mu{background:transparent;border:0;box-shadow:none;padding:0;margin:10px 0}
+.mu.done{border:0}
+.mlab{font-family:'Barlow Condensed';font-weight:800;font-style:italic;font-size:10.5px;letter-spacing:.12em;color:#c9d0dc;padding:0 2px 4px}
+.mlab .ml{opacity:.85}
+.panel.E .mlab{flex-direction:row-reverse}
+.info,.sty{font-family:'Barlow Condensed';font-weight:800;font-style:normal;font-size:9.5px;letter-spacing:.1em;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#dfe4ee;opacity:1}
+.sty.has{background:rgba(244,198,78,.18);border-color:var(--gold);color:var(--gold)}
+.gms{display:none!important}
+.team{display:flex!important;align-items:center;gap:8px;height:40px!important;padding:3px 10px 3px 3px!important;border-radius:6px!important;
+  background:linear-gradient(180deg, rgba(30,36,54,.92), rgba(12,15,26,.92))!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 4px 14px rgba(0,0,0,.45)!important;text-align:left}
+.team+.team{margin-top:5px}
+.tile{flex:none;width:50px;height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(155deg, color-mix(in srgb, var(--tc) 70%, #fff 30%) 0%, var(--tc) 45%, color-mix(in srgb, var(--tc) 65%, #000) 100%);
+  border-bottom:3px solid var(--ts);font-family:'Barlow Condensed';font-weight:900;font-style:italic;font-size:17px;letter-spacing:.02em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.team.tbd .tile{background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.18)}
+.sd{flex:1;min-width:0;font-family:'Barlow Condensed';font-weight:800;font-style:italic;font-size:15px;letter-spacing:.04em;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.sd em{font-style:normal;font-size:9px;letter-spacing:.12em;padding:1px 4px;border-radius:3px;background:var(--gold);color:#1b1300}
+.wn{flex:none;min-width:20px;text-align:right;font-family:'Barlow Condensed';font-weight:900;font-style:italic;font-size:22px;color:#fff}
+.tbdtxt{flex:1;min-width:0;border:0!important;height:auto!important;padding:0!important;font-family:'Barlow Condensed';font-weight:700;font-style:italic;font-size:12px;color:#7d889e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team.win{background:linear-gradient(180deg, rgba(48,56,80,.95), rgba(18,22,36,.95))!important;border-color:rgba(255,255,255,.55)!important}
+.team.win .wn{color:#fff}
+.team.lose{opacity:.42}
+.team.me{box-shadow:0 0 0 2px var(--gold), 0 4px 14px rgba(0,0,0,.45)!important}
+.panel.E .team{flex-direction:row-reverse;padding:3px 3px 3px 10px!important}
+.panel.E .sd{justify-content:flex-end}
+.panel.E .wn{text-align:left}
+.mu.turn{animation:none}
+.mu.turn .team{animation:pulse2 1.4s ease-in-out infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 3px rgba(244,198,78,.45), 0 4px 14px rgba(0,0,0,.45)}}
+.mu.turn .ml{color:var(--gold)}
+.pi{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12)}
+.pi .sub{color:#fff;font-family:'Barlow Condensed';font-weight:800;font-style:italic}
+
+/* finals */
+.finals .mu{padding:0}
+.finals .team{height:46px!important}
+.finals .tile{width:58px;height:36px;font-size:19px}
+.champ{background:radial-gradient(60% 60% at 50% 35%, rgba(244,198,78,.16), rgba(8,10,18,.85) 70%);border:1px solid rgba(244,198,78,.35)}
+.champ.on{background:radial-gradient(60% 60% at 50% 30%, color-mix(in srgb, var(--tc) 60%, transparent), rgba(8,10,18,.9) 75%)}
+.ck,.cn{font-family:'Barlow Condensed'!important;font-weight:900!important;font-style:italic}
+.mvp input{background:rgba(12,16,28,.85)}
+
+/* full-view (fit to screen) */
+.bscroll.fit{overflow:hidden}
+.bscroll.fit .bwrap{transform-origin:0 0}
+.jump button#fitbtn{color:#fff;border-color:rgba(255,255,255,.4)}
+
+/* news / press cards */
+.art,.prs,.pstory,.mbox,.srow,.seedcol{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.art{background:rgba(12,16,28,.86);border-color:rgba(255,255,255,.12);overflow:hidden;padding:0 0 4px}
+.art>*:not(.aimg){margin-left:16px;margin-right:16px}
+.art .atag{margin-top:12px}
+.art h3{font-family:'Barlow Condensed';font-weight:800;font-style:italic;font-size:25px}
+.aimg{position:relative;width:100%;aspect-ratio:16/7;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.12);background:#0a0d16}
+.aimg>svg,.aimg>img{display:block;width:100%;height:100%;object-fit:cover}
+.aph{font-family:'Barlow Condensed';font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#c9d0dc;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 8px;position:absolute;right:10px;top:10px}
+.prs{padding:0 0 6px;overflow:hidden;background:rgba(12,16,28,.88)}
+.prs>*:not(.aimg){margin-left:16px;margin-right:16px}
+.prs .prh{margin-top:12px}
+.utag{background:var(--gold)!important}
+.myscore{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 2px}
+.myscore>div{background:#0c1220;border:1px solid var(--line);border-radius:10px;padding:6px 8px;min-width:0}
+.myscore>div>b{display:block;font-family:'Barlow Condensed';font-weight:800;font-size:12px;letter-spacing:.1em;color:var(--mut);margin-bottom:4px}
+.psrow{display:grid;grid-template-columns:1fr 64px;gap:4px;margin-top:4px}
+.psrow input,.pimg{background:#070b14;border:1px solid var(--line);border-radius:7px;padding:6px 7px;font-family:'Barlow Condensed';font-weight:600;font-size:15px;color:var(--tx);min-width:0;width:100%}
+.psrow input:focus,.pimg:focus{outline:none;border-color:var(--gold)}
+.pimg{margin-top:6px;font-size:13px}
+.uline{font-family:'Barlow Condensed';font-weight:600;font-size:15px;color:#cfd6e3}
+@media (max-width:480px){
+  .myscore{grid-template-columns:1fr}
+  h1{font-size:46px}
+  .bwrap .ph h2{font-size:24px}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="wood"></div><div class="court"></div>
+  <div class="hbg"></div>
   <div class="hin">
-    <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#ff7a1a" stroke="#1b0d03" stroke-width="2"/><path d="M2 24h44M24 2v44M8.5 8.5c8 8 8 23 0 31M39.5 8.5c-8 8-8 23 0 31" stroke="#1b0d03" stroke-width="2" fill="none"/></svg>
-    <div>
-      <div class="kick">NBA PLAYOFFS · FAN BRACKET</div>
-      <h1>BRACKET <span id="yh">2027</span></h1>
+    <div class="htitle">
+      <div class="kick">FAN BRACKET</div>
+      <h1><span class="pw">PLAYOFFS</span> <span id="yh">2027</span></h1>
       <div class="asof" id="asof"></div>
       <span class="era" id="era"></span>
     </div>
@@ -439,15 +566,15 @@ footer{text-align:center;color:#4f5b75;font-size:12px;padding:10px 16px 30px}
     <div class="xpb"><div class="xpf" id="xpf"></div></div>
   </div>
   <div class="tools">
-    <button class="btn" id="ficbtn" data-act="fic">🎲 Fictional League</button>
-    <label class="myt">🎮 MY TEAM <select id="myteam" aria-label="My Team"></select></label>
-    <label class="myt">🏆 FORMAT <select id="fmt" aria-label="Series format"><option value="bo5">Best-of-5 (first to 3)</option><option value="orig">Original (Bo7)</option></select></label>
-    <label class="myt">⏱ QUARTERS <select id="qlen" aria-label="Quarter length"><option value="5">5 min</option><option value="12">12 min</option></select></label>
-    <button class="btn" data-act="sim1">▶ Sim Next</button>
-    <button class="btn" data-act="simall">⏩ Sim All</button>
-    <button class="btn" data-act="copy">📋 Copy</button>
-    <button class="btn" data-act="code">🔁 Save Code</button>
-    <button class="btn ghost" data-act="reset">↺ Reset</button>
+    <button class="btn" id="ficbtn" data-act="fic">Fictional League</button>
+    <label class="myt">MY TEAM <select id="myteam" aria-label="My Team"></select></label>
+    <label class="myt">FORMAT <select id="fmt" aria-label="Series format"><option value="bo5">Best-of-5 (first to 3)</option><option value="orig">Original (Bo7)</option></select></label>
+    <label class="myt">QUARTERS <select id="qlen" aria-label="Quarter length"><option value="5">5 min</option><option value="12">12 min</option></select></label>
+    <button class="btn" data-act="sim1">Sim Next</button>
+    <button class="btn" data-act="simall">Sim All</button>
+    <button class="btn" data-act="copy">Copy</button>
+    <button class="btn" data-act="code">Save Code</button>
+    <button class="btn ghost" data-act="reset">Reset</button>
   </div>
 </div>
 
@@ -459,7 +586,7 @@ footer{text-align:center;color:#4f5b75;font-size:12px;padding:10px 16px 30px}
 </div></nav>
 
 <main id="main" data-tab="F">
-  <div class="jump" id="jump"><button data-jump="W">◀ West</button><button data-jump="F">🏆 Finals</button><button data-jump="E">East ▶</button></div>
+  <div class="jump" id="jump"><button data-jump="W">◀ West</button><button data-jump="F">Finals</button><button data-jump="E">East ▶</button><button data-act="fit" id="fitbtn">⤢ Full view</button></div>
   <div class="bscroll" id="bscroll"><div class="bwrap" id="bwrap"></div></div>
   <div id="seedwrap"></div>
   <div id="newswrap"></div>
@@ -851,6 +978,11 @@ function resolve(){
 }
 const myTeam = () => cur().my || '';
 const involvesMy = k => { const m = myTeam(); if(!m) return false; const t = parts(k); return t[0]===m || t[1]===m; };
+function scorersOf(g, id){
+  if(g.ps && g.ps[id] && g.ps[id].some(x=>x && x.n)) return g.ps[id].filter(x=>x && x.n).map(x=>({n:x.n, p:x.p}));
+  const s = st(id), pts = g.pl && g.pl[id]; return s && pts ? s.pl.map((x,j)=>({n:x.n, p:pts[j]})) : [];
+}
+const scLine = (g, id, full) => scorersOf(g, id).map(x=>`${full ? x.n : lastName(x.n)}${x.p!=='' && x.p!=null ? ' '+x.p : ''}`).join(' · ');
 const isMySeries = k => { const m = myTeam(); const p = PK()[k]; return !!m && !!p && (p.w===m || L(k)===m); };
 const myKeys = () => ORDER().filter(k => isMySeries(k));
 function roundName(k){
@@ -1015,6 +1147,7 @@ function maskItem(item){
   if(item.head) item.head = m(item.head);
   if(item.body) item.body = item.body.map(m);
   if(item.qa) item.qa = item.qa.map(([q, who, a])=>[m(q), m(who), m(a)]);
+  if(item.pn) item.pn = item.pn.map(m);
   item.sim = 1;
   return item;
 }
@@ -1057,6 +1190,7 @@ function trashTalk(name, per, opp, oppName){
 }
 function mediaForSeries(k){
   const p = PK()[k]; if(!p || !p.sim) return;
+  if(involvesMy(k)) return;  // your series: only what you write
   newsSeries(k);
   pressSeries(k, p.w, true); pressSeries(k, L(k), false);
   if(Math.random()<0.35) newsRivalry(k, null);
@@ -1099,7 +1233,7 @@ function newsMatchup(k){
   const n = p.sim.games.length, A = TEAMS[a], B = TEAMS[b];
   let duels = 0; p.sim.games.forEach(g=>{ const ta = topOf(g, a), tb = topOf(g, b); if(ta && tb && ta.n===sa.n && tb.n===sb.n) duels++; });
   const head = pick1([`${sa.n} vs. ${sb.n}: the duel that defined the series`, `Star vs. star: ${sa.n} and ${sb.n} go toe-to-toe`, `${sa.n} wins the battle with ${sb.n}`]);
-  addNews({k, t:'RIVALRY', head, teams:[a, b], body:[
+  addNews({k, t:'RIVALRY', head, teams:[a, b], pn:[sa.n, sb.n], body:[
     `The ${roundName(k)} series between the ${A.n} and the ${B.n} turned into a head-to-head showcase between ${sa.n} and ${sb.n}. ${sa.n} averaged ${sa.a.toFixed(1)} points over ${n} games, while ${sb.n} answered with ${sb.a.toFixed(1)}. They led their teams in scoring in the same game ${duels} time${duels===1?'':'s'}, and every possession they shared felt like a statement. ${sa.a>=sb.a ? `${sa.n} won the individual battle and the series` : `${sb.n} won the scoring battle, but ${sa.n} got the last word with the series win`}. It is the kind of matchup fans will argue about for years.`,
     `Both teams built their game plans around slowing the other's star, and neither fully succeeded. ${strengthPhrase(a) ? `The ${A.n} leaned on ${strengthPhrase(a)}` : `The ${A.n} stayed balanced`}, while ${strengthPhrase(b) ? `the ${B.n} countered with ${strengthPhrase(b)}` : `the ${B.n} tried to grind it out`}. In the end, ${sa.n} had a little more help around him.`
   ]});
@@ -1272,6 +1406,7 @@ function newsSeries(k){
   addNews({k, t: k==='F' ? 'FINALS' : 'SERIES', head, body: body.filter(Boolean), teams:[w,l]});
 }
 function newsPreview(k){
+  if(involvesMy(k)) return;
   const [a, b] = parts(k), sa = st(a), sb = st(b), A = TEAMS[a], B = TEAMS[b];
   const fav = sa && sb ? (sa.ovr>=sb.ovr ? a : b) : a, dog = fav===a ? b : a;
   const single = !isSeries(k), need = single ? 1 : gameOpts(k)[0];
@@ -1306,7 +1441,7 @@ function newsRivalry(k, pre){
     `${pick1([`League sources say officials have been told to keep a close eye on the matchup.`, `Former players on national broadcasts have already picked sides, and social media is doing the rest.`, `Both coaches tried to downplay the back-and-forth, but nobody in either locker room is pretending it isn't personal.`])} ${pre ? `The first meeting will tell us a lot about who backs it up.` : `Whatever happens next, this one is not going away quietly.`} ${pick1([`Grab your popcorn.`, `Circle the next game on your calendar.`, `Stay tuned.`])}`
   ];
   rv.heat++;
-  addNews({k, t:'RIVALRY', head, body, teams:[ta,tb], q:1});
+  addNews({k, t:'RIVALRY', head, body, teams:[ta,tb], pn:[pa, pb], q:1});
 }
 function pressQA(k, id, won, gi, games){
   const opp = parts(k)[0]===id ? parts(k)[1] : parts(k)[0], T = TEAMS[id], O = TEAMS[opp];
@@ -1412,8 +1547,8 @@ function myStory(k){
   const w = p.w, l = L(k), games = p.sim.games, wins = {[w]:0, [l]:0};
   const lines = games.map((g, i) => {
     wins[g.hs>g.as ? g.h : g.a]++;
-    if(!g.rc) g.rc = gameRecap(k, i, games);
-    return `${games.length>1 ? 'Game '+(i+1) : 'Game'} (@${AB(g.h)}): ${TEAMS[g.a].n} ${g.as} – ${TEAMS[g.h].n} ${g.hs}${g.ot ? ' (OT)' : ''}. ${(g.r||'').trim() || g.rc}`;
+    const sc = [g.a, g.h].map(id=>scLine(g, id, true) ? `${AB(id)}: ${scLine(g, id, true)}` : '').filter(Boolean).join(' | ');
+    return `${games.length>1 ? 'Game '+(i+1) : 'Game'} (@${AB(g.h)}): ${TEAMS[g.a].n} ${g.as} – ${TEAMS[g.h].n} ${g.hs}${g.ot ? ' (OT)' : ''}.${(g.r||'').trim() ? ' '+g.r.trim() : ''}${sc ? `\nScorers — ${sc}` : ''}`;
   });
   return [`${roundName(k)} ${state.year} — ${TEAMS[w].c} ${TEAMS[w].n} def. ${TEAMS[l].n}${games.length>1 ? ` ${wins[w]}-${wins[l]}` : ''}.`, ...lines, (p.sum||'').trim()].filter(Boolean).join('\n\n');
 }
@@ -1431,25 +1566,30 @@ const storyOf = k => { const p = PK()[k]; return p ? (p.s || p.n || '').trim() :
 /* ================= RENDER ================= */
 const badge = (id, cls='') => `<span class="badge ${cls}" style="--tc:${TEAMS[id].p};--ts:${TEAMS[id].s}">${AB(id)}</span>`;
 function ovrPill(a){ const s = st(a); return s ? `<span class="ovr" style="--oc:${ovrColor(s.ovr)}">${s.ovr}</span>` : ''; }
+const ORD = n => n + (n%100>=11 && n%100<=13 ? 'TH' : ({1:'ST',2:'ND',3:'RD'}[n%10] || 'TH'));
+function winsOf(k, id){
+  const p = PK()[k], d = cur();
+  const games = p && p.sim ? p.sim.games : (d.live && d.live.k===k ? d.live.games : null);
+  if(!games || !games.length) return p ? (p.w===id ? '✓' : '') : '';
+  return games.filter(g=>(g.hs>g.as ? g.h : g.a)===id).length;
+}
 function teamRow(k, a, hint){
-  if(!a) return `<div class="team tbd"><span class="seed"></span><span class="tbdtxt">${hint||'TBD'}</span></div>`;
+  if(!a) return `<div class="team tbd"><span class="tile"></span><span class="tbdtxt">${hint||'TBD'}</span><span class="wn"></span></div>`;
   const p = PK()[k], T = TEAMS[a];
   const cls = (p ? (p.w===a ? 'win' : 'lose') : '') + (a===myTeam() ? ' me' : '');
-  const S0 = st(a), tip = S0 ? ` title="${esc(T.c+' '+T.n+' · '+S0.r+' · ⭐ '+S0.pl[0].n)}"` : '';
-  return `<button class="team ${cls}" data-k="${k}" data-t="${a}" style="--tc:${T.p};--ts:${T.s}" aria-pressed="${!!(p&&p.w===a)}"${tip}>
-    <span class="seed">${a===myTeam() ? '🎮' : seedOf(a).s}</span><span class="badge">${AB(a)}</span><span class="nm">${T.n}</span>${ovrPill(a)}<span class="chk">✓</span></button>`;
+  const S0 = st(a), tip = S0 ? ` title="${esc(T.c+' '+T.n+' · '+S0.r)}"` : '';
+  const sd = seedOf(a);
+  return `<button class="team ${cls}" data-k="${k}" data-t="${a}" style="--tc:${T.p};--ts:${T.s}" aria-pressed="${!!(p&&p.w===a)}" aria-label="${esc(T.c+' '+T.n)}"${tip}>
+    <span class="tile">${AB(a)}</span><span class="sd">${sd.s ? ORD(sd.s) : ''}${a===myTeam() ? '<em>YOU</em>' : ''}</span><span class="wn">${winsOf(k, a)}</span></button>`;
 }
-function liveScore(k){ const L_ = cur().live; if(!L_ || L_.k!==k || !L_.games.length) return ''; const m = myTeam(); let a = 0, b = 0; L_.games.forEach(g=>{ (g.hs>g.as ? g.h : g.a)===m ? a++ : b++; }); return `🎮 ${a}-${b}`; }
+function liveScore(k){ const L_ = cur().live; if(!L_ || L_.k!==k || !L_.games.length) return ''; const m = myTeam(); let a = 0, b = 0; L_.games.forEach(g=>{ (g.hs>g.as ? g.h : g.a)===m ? a++ : b++; }); return `YOUR SERIES ${a}-${b}`; }
 function matchup(k, label, hints){
   hints = hints || [];
   const t = parts(k), p = PK()[k];
-  const res = p ? `<span class="res">${AB(p.w)}${p.g ? ' in '+p.g : ''}</span>` : '';
-  let gms = '';
-  if(isSeries(k)) gms = `<div class="gms"><span>Games</span>${gameOpts(k).map(g=>`<button class="gm ${p&&p.g===g?'on':''}" data-k="${k}" data-g="${g}" ${p?'':'disabled'}>${g}</button>`).join('')}</div>`;
-  const info = t[0] && t[1] ? `<button class="info" data-info="${k}" aria-label="Stats">📊</button>` : '';
-  const sty = p ? `<button class="sty ${storyOf(k)?'has':''}" data-story="${k}" aria-label="Story">✍️</button>` : '';
+  const info = t[0] && t[1] ? `<button class="info" data-info="${k}" aria-label="Series stats">STATS</button>` : '';
+  const sty = p ? `<button class="sty ${storyOf(k)?'has':''}" data-story="${k}" aria-label="Story">STORY</button>` : '';
   const turn = !p && t[0] && t[1] && involvesMy(k);
-  return `<div class="mu ${p?'done':''} ${turn?'turn':''}" data-mk="${k}"><div class="mlab"><span class="ml">${turn ? (liveScore(k) || '🎮 YOUR TURN') : label}</span>${info}${sty}${res}</div>${teamRow(k,t[0],hints[0])}${teamRow(k,t[1],hints[1])}${gms}</div>`;
+  return `<div class="mu ${p?'done':''} ${turn?'turn':''}" data-mk="${k}"><div class="mlab"><span class="ml">${turn ? (liveScore(k) || 'YOUR TURN — TAP TO PLAY') : label}</span>${info}${sty}</div>${teamRow(k,t[0],hints[0])}${teamRow(k,t[1],hints[1])}</div>`;
 }
 const countConf = c => CKs().filter(k=>PK()[c+k]).length;
 function confPanel(c){
@@ -1460,10 +1600,10 @@ function confPanel(c){
       ${matchup(c+'PI3','Last game → 8th seed',['Loser of 7 vs 8','Winner of 9 vs 10'])}
     </div></div>` : '';
   return `<section class="panel ${c}">
-    <div class="ph"><h2>${nm} Conference</h2><span class="pc">${countConf(c)} / ${CKs().length}</span></div>
+    <div class="ph"><h2>${nm.toUpperCase()}<br>CONFERENCE</h2><span class="pc">${countConf(c)} / ${CKs().length}</span></div>
     ${pi}
     <div class="rwrap" data-c="${c}">
-      <div class="rlabels"><span>First Round</span><span>Conf Semis</span><span>Conf Finals</span></div>
+      <div class="rlabels"><span>First Round</span><span>Conf. Semifinals</span><span>Conf. Finals</span></div>
       <div class="rounds">
         <div class="col">
           <div class="pair">${matchup(c+'R1A','1 vs 8',['','8th seed (Play-In)'])}${matchup(c+'R1B','4 vs 5')}</div>
@@ -1521,12 +1661,12 @@ function finalsPanel(){
     box = `<div class="champ on" style="--tc:${T.p}">${TROPHY}<div class="ck">${y} NBA CHAMPIONS</div><div class="cn">${T.c}<br>${T.n}</div><div class="cc">def. ${TEAMS[l].n}${p.g ? ' in '+p.g : ''}</div>${s ? `<div class="cstar">⭐ ${esc(s.pl[0].n)} · ${s.pl[0].p} PPG</div>` : ''}</div>`;
   } else box = `<div class="champ">${TROPHY}<div class="ck">${y} NBA CHAMPIONS</div><div class="cq">Who's lifting the trophy?</div></div>`;
   return `<section class="panel F">
-    <div class="ph" style="justify-content:center"><h2 style="color:var(--gold)">${y} NBA Finals</h2></div>
+    <div class="ph fin"><h2><small>${y}</small>Finals</h2></div>
     <div class="finals">
       ${matchup('F','The Finals',['West champion','East champion'])}
       ${box}
       <label class="mvp">FINALS MVP<input id="mvp" maxlength="40" placeholder="Who's your Finals MVP?" value="${esc(cur().mvp)}"></label>
-      ${myTeam() && myKeys().length ? `<button class="btn pri myrep" data-act="myreport">🖨️ Print ${esc(TEAMS[myTeam()].n)} Playoff Report</button>` : ''}
+      ${myTeam() && myKeys().length ? `<button class="btn pri myrep" data-act="myreport">Print ${esc(TEAMS[myTeam()].n)} Playoff Report</button>` : ''}
       ${leadersBox()}
       ${revealBox()}
       ${storyList()}
@@ -1557,21 +1697,134 @@ function seedPanel(){
     ${now && !fic ? `<div class="seedact"><button class="btn" data-act="seedreset">↺ Reset to current standings</button></div>` : ''}
   </section>`;
 }
-const TAGC = {RECAP:'#7ab8ff', SERIES:'#4ade80', FINALS:'#ffc94a', PREVIEW:'#c4b5fd', RIVALRY:'#f87171'};
+const TAGC = {'MY GAME':'#f4c64e', 'MY SERIES':'#f4c64e', RECAP:'#7ab8ff', SERIES:'#4ade80', FINALS:'#ffc94a', PREVIEW:'#c4b5fd', RIVALRY:'#f87171'};
+/* ================= ARTICLE / PRESS IMAGES (generated graphics) ================= */
+const hashN = s => { let x = 7; for(const c of String(s)) x = (x*31 + c.charCodeAt(0)) >>> 0; return x; };
+const lastOf = n => String(n).split(' ').filter(x=>!/^(Jr\.?|Sr\.?|II|III|IV)$/i.test(x)).pop() || String(n);
+const FNT = `font-family="Barlow Condensed, 'Arial Narrow', Arial, sans-serif"`;
+function mixHex(a, b, t){
+  const p = x => { x = String(x).replace('#',''); if(x.length===3) x = x.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(x.slice(i,i+2),16)||0); };
+  const A = p(a), B = p(b); return '#' + A.map((v,i)=>Math.round(v + (B[i]-v)*t).toString(16).padStart(2,'0')).join('');
+}
+function svgDefs(ids){
+  return `<defs>${ids.map(id=>{ const T = TEAMS[id]; return `<linearGradient id="g_${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${mixHex(T.p, '#ffffff', .25)}"/><stop offset=".45" stop-color="${T.p}"/><stop offset="1" stop-color="${mixHex(T.p, '#000000', .45)}"/></linearGradient>`; }).join('')}
+    <radialGradient id="g_spot" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="g_shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".65"/></linearGradient></defs>`;
+}
+const streaks = () => [0,1,2,3].map(i=>`<rect x="${120+i*170}" y="-60" width="${10+i*4}" height="520" fill="#fff" opacity=".05" transform="rotate(${18+i*3} ${120+i*170} 0)"/>`).join('');
+function jersey(id, name, x, y, sc){
+  const T = TEAMS[id], num = (hashN(name) % 54) + 1;
+  return `<g transform="translate(${x},${y}) scale(${sc})">
+    <path d="M16 6 L38 0 Q60 28 82 0 L104 6 Q102 40 118 52 L114 170 L6 170 L2 52 Q18 40 16 6 Z" fill="url(#g_${id})" stroke="${T.s}" stroke-width="5"/>
+    <path d="M38 0 Q60 28 82 0" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+    <text x="60" y="64" text-anchor="middle" ${FNT} font-weight="800" font-size="${Math.min(17, 150/Math.max(4, lastOf(name).length))}" fill="#fff" letter-spacing="1">${esc(lastOf(name).toUpperCase())}</text>
+    <text x="60" y="140" text-anchor="middle" ${FNT} font-weight="900" font-size="68" fill="#fff" stroke="${T.s}" stroke-width="3" paint-order="stroke">${num}</text></g>`;
+}
+function svgWrap(inner, ids){ return `<svg viewBox="0 0 800 350" preserveAspectRatio="xMidYMid slice" role="img" aria-hidden="true">${svgDefs(ids)}${inner}</svg>`; }
+function splitBg(a, b){
+  return `<polygon points="0,0 432,0 368,350 0,350" fill="url(#g_${a})"/><polygon points="432,0 800,0 800,350 368,350" fill="url(#g_${b})"/>
+    <polygon points="426,0 438,0 374,350 362,350" fill="#fff" opacity=".85"/>
+    <text x="200" y="250" text-anchor="middle" ${FNT} font-style="italic" font-weight="900" font-size="190" fill="#fff" opacity=".13">${AB(a)}</text>
+    <text x="610" y="250" text-anchor="middle" ${FNT} font-style="italic" font-weight="900" font-size="190" fill="#fff" opacity=".13">${AB(b)}</text>
+    ${streaks()}<rect width="800" height="350" fill="url(#g_spot)"/><rect width="800" height="350" fill="url(#g_shade)"/>`;
+}
+function artGame(a, b, big, sub){
+  return svgWrap(`${splitBg(a, b)}
+    <rect x="270" y="118" width="260" height="114" rx="10" fill="#05070d" fill-opacity=".82" stroke="#fff" stroke-opacity=".35"/>
+    <text x="400" y="190" text-anchor="middle" ${FNT} font-style="italic" font-weight="900" font-size="${String(big).length>7 ? 42 : 58}" fill="#fff">${esc(big)}</text>
+    <text x="400" y="218" text-anchor="middle" ${FNT} font-weight="800" font-size="17" fill="#f4c64e" letter-spacing="3">${esc(sub)}</text>`, [a, b]);
+}
+function artPlayers(a, na, b, nb, sub){
+  return svgWrap(`${splitBg(a, b)}${jersey(a, na, 95, 95, 1.45)}${jersey(b, nb, 530, 95, 1.45)}
+    <text x="400" y="200" text-anchor="middle" ${FNT} font-style="italic" font-weight="900" font-size="72" fill="#fff" stroke="#000" stroke-opacity=".4" stroke-width="2" paint-order="stroke">VS</text>
+    <text x="400" y="236" text-anchor="middle" ${FNT} font-weight="800" font-size="16" fill="#f4c64e" letter-spacing="3">${esc(sub)}</text>`, [a, b]);
+}
+function artSeries(w, big, sub, champ){
+  const tr = champ ? TROPHY.replace('<svg ', '<svg x="352" y="40" width="96" height="120" ') : '';
+  return svgWrap(`<rect width="800" height="350" fill="url(#g_${w})"/>
+    <text x="400" y="300" text-anchor="middle" ${FNT} font-style="italic" font-weight="900" font-size="300" fill="#fff" opacity=".1">${AB(w)}</text>
+    ${streaks()}<rect width="800" height="350" fill="url(#g_spot)"/><rect width="800" height="350" fill="url(#g_shade)"/>${tr}
+    <text x="400" y="${champ ? 232 : 200}" text-anchor="middle" ${FNT} font-style="italic" font-weight="900" font-size="${champ ? 64 : 76}" fill="#fff">${esc(big)}</text>
+    <text x="400" y="${champ ? 266 : 236}" text-anchor="middle" ${FNT} font-weight="800" font-size="18" fill="#f4c64e" letter-spacing="4">${esc(sub)}</text>`, [w]);
+}
+function artPress(id, name, title){
+  const T = TEAMS[id];
+  let pat = '';
+  for(let r=0; r<6; r++) for(let c=0; c<7; c++) pat += `<text x="${c*130 + (r%2)*65 + 10}" y="${r*58 + 40}" ${FNT} font-style="italic" font-weight="900" font-size="30" fill="#fff" opacity=".12">${AB(id)}</text>`;
+  const mic = x => `<rect x="${x-2}" y="205" width="4" height="60" fill="#111"/><rect x="${x-9}" y="186" width="18" height="30" rx="8" fill="#1c1f26" stroke="#555" stroke-width="1.5"/><rect x="${x-11}" y="218" width="22" height="12" rx="2" fill="${T.s}"/>`;
+  return svgWrap(`<rect width="800" height="350" fill="url(#g_${id})"/>${pat}<rect width="800" height="350" fill="url(#g_shade)"/><rect width="800" height="350" fill="url(#g_spot)"/>
+    <rect x="0" y="262" width="800" height="88" fill="#0b0d12"/><rect x="0" y="262" width="800" height="4" fill="#fff" opacity=".18"/>
+    ${mic(330)}${mic(372)}${mic(428)}${mic(470)}
+    <rect x="260" y="282" width="280" height="46" rx="4" fill="#fff"/>
+    <text x="400" y="314" text-anchor="middle" ${FNT} font-weight="800" font-size="24" fill="#0b0d12" letter-spacing="1">${esc(String(name).toUpperCase())}</text>
+    <text x="24" y="40" ${FNT} font-weight="800" font-size="16" fill="#fff" letter-spacing="3">${esc(title.toUpperCase())}</text>`, [id]);
+}
+const userImg = url => `<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">`;
+function gameOfItem(x){ const p = PK()[x.k], d = cur(); const games = p && p.sim ? p.sim.games : (d.live && d.live.k===x.k ? d.live.games : []); return x.gi!=null ? games[x.gi] : null; }
+function newsImage(x){
+  const g = gameOfItem(x);
+  const url = x.img || (g && g.img);
+  let inner;
+  if(url) inner = userImg(url);
+  else if((x.t==='RECAP' || x.t==='MY GAME') && g){ const w = g.hs>g.as ? g.h : g.a, l = w===g.h ? g.a : g.h; inner = artGame(w, l, `${Math.max(g.hs,g.as)} – ${Math.min(g.hs,g.as)}`, `${isSeries(x.k) ? 'GAME '+(x.gi+1) : 'PLAY-IN'} · FINAL${g.ot ? ' / OT' : ''}`); }
+  else if(x.t==='SERIES' || x.t==='FINALS' || x.t==='MY SERIES'){ const w = x.teams[0]; inner = artSeries(w, x.k==='F' ? 'CHAMPIONS' : 'ADVANCE', `${TEAMS[w].c} ${TEAMS[w].n}`.toUpperCase(), x.k==='F'); }
+  else if((x.t==='RIVALRY' || x.t==='PREVIEW') && x.teams.length===2){
+    const [a, b] = x.teams, na = (x.pn && x.pn[0]) || (st(a) ? st(a).pl[0].n : TEAMS[a].n), nb = (x.pn && x.pn[1]) || (st(b) ? st(b).pl[0].n : TEAMS[b].n);
+    inner = artPlayers(a, na, b, nb, x.t==='PREVIEW' ? roundName(x.k).toUpperCase() : 'RIVALRY');
+  } else if(x.teams && x.teams.length===2) inner = artGame(x.teams[0], x.teams[1], 'VS', roundName(x.k).toUpperCase());
+  else return '';
+  return `<div class="aimg">${inner}<button class="aph" data-photo="n${x.id}">${url ? 'Change photo' : 'Add photo'}</button></div>`;
+}
+function pressImage(x){
+  let inner;
+  if(x.img) inner = userImg(x.img);
+  else if(x.desk) inner = artGame(x.team, parts(x.k).find(t=>t!==x.team) || x.team, 'POSTGAME', 'ANALYST DESK');
+  else { const sp = (x.qa.find(q=>q[1] && q[1]!=='Head coach' && !/coach/i.test(q[0])) || [])[1] || x.qa[0][1]; inner = artPress(x.team, sp, x.title); }
+  return `<div class="aimg">${inner}<button class="aph" data-photo="p${x.id}">${x.img ? 'Change photo' : 'Add photo'}</button></div>`;
+}
+function photoModal(ref){
+  const d = cur(), list = ref[0]==='n' ? d.news : d.press, it = list.find(x=>String(x.id)===ref.slice(1)); if(!it) return;
+  const g = ref[0]==='n' ? gameOfItem(it) : null, curUrl = it.img || (g && g.img) || '';
+  openModal('Add a photo', `<p>Paste a link to an image (it must end up as a direct image URL, e.g. ending in .jpg or .png). It replaces the generated graphic on this story.</p>
+    <input id="ph-url" class="pimg" maxlength="500" placeholder="https://…/photo.jpg" value="${esc(curUrl)}">
+    <p class="note">Photos load from the link you give, so they only show while that link works.</p>`, [
+    ...(curUrl ? [{label:'Remove photo', cls:'ghost', fn:()=>{ it.img = ''; if(g) g.img = ''; save(); render(); }}] : []),
+    {label:'Cancel', cls:'ghost'},
+    {label:'Save', cls:'pri', fn:()=>{ const v = document.getElementById('ph-url').value.trim(); it.img = v; if(g) g.img = v; save(); render(); }}
+  ]);
+  setTimeout(()=>{ const i = document.getElementById('ph-url'); if(i) i.focus(); }, 60);
+}
+function userItem(x){
+  const p = PK()[x.k];
+  if(x.t==='MY GAME'){
+    const g = gameOfItem(x); if(!g) return null;
+    const w = g.hs>g.as ? g.h : g.a, l = w===g.h ? g.a : g.h;
+    const head = `${isSeries(x.k) ? `Game ${x.gi+1}: ` : ''}${TEAMS[w].n} ${Math.max(g.hs,g.as)}, ${TEAMS[l].n} ${Math.min(g.hs,g.as)}${g.ot ? ' (OT)' : ''}`;
+    const rep = (g.r||'').trim(), sc = [x.teams[0], x.teams[1]].map(id=>scLine(g, id, true) ? `<p class="uline"><b>${AB(id)}:</b> ${esc(scLine(g, id, true))}</p>` : '').join('');
+    return {head, html: (rep ? rep.split(/\n+/).map(t=>`<p>${esc(t)}</p>`).join('') : `<p class="note">No report yet — tap your matchup in the bracket to write what happened.</p>`) + sc};
+  }
+  if(!p || !p.sim) return null;
+  const w = p.w, l = L(x.k), wins = {[w]:0, [l]:0}; p.sim.games.forEach(g=>wins[g.hs>g.as ? g.h : g.a]++);
+  const sum = (p.sum||'').trim();
+  return {head: `${TEAMS[w].n} ${x.k==='F' ? 'win the title over' : 'beat'} ${TEAMS[l].n}${isSeries(x.k) ? ` ${wins[w]}-${wins[l]}` : ''}`,
+    html: sum ? sum.split(/\n+/).map(t=>`<p>${esc(t)}</p>`).join('') : `<p class="note">No series summary yet — open your series to write one.</p>`};
+}
 function newsPanel(){
   const d = cur(), f = state.nf || 'all', m = myTeam();
   let items = d.news.slice().reverse();
   if(f==='my') items = items.filter(x => m && x.teams && x.teams.includes(m));
   if(f==='riv') items = items.filter(x => x.t==='RIVALRY' || (x.body||[]).some(p=>/technical|words|stare|tangled|jawing/i.test(p)));
   const filt = `<div class="nfil">${[['all','All'],['my','My Team'],['riv','Rivalries']].map(([v,l])=>`<button class="chipb ${f===v?'on':''}" data-nf="${v}">${l}</button>`).join('')}</div>`;
-  const card = x => `<article class="art">
-      <div class="atag"><span style="background:${TAGC[x.t]||'#999'}">${x.t}</span><small>${esc(roundName(x.k))} · Day ${x.day}${x.sim ? ' · <span class="simtag">SIMULATED QUOTES</span>' : ''}</small></div>
-      <h3>${esc(x.head)}</h3>
+  const card = x => {
+    const u = x.user ? userItem(x) : null; if(x.user && !u) return '';
+    return `<article class="art">${newsImage(x)}
+      <div class="atag"><span class="${x.user ? 'utag' : ''}" style="background:${TAGC[x.t]||'#999'}">${x.user ? (x.t==='MY GAME' ? 'YOUR GAME' : 'YOUR SERIES') : x.t}</span><small>${esc(roundName(x.k))} · Day ${x.day}${x.user ? ' · written by you' : ''}${x.sim ? ' · <span class="simtag">SIMULATED QUOTES</span>' : ''}</small></div>
+      <h3>${esc(u ? u.head : x.head)}</h3>
       <div class="ateams">${(x.teams||[]).map(id=>badge(id)).join('')}</div>
-      ${x.body.map(p=>`<p>${esc(p)}</p>`).join('')}
-    </article>`;
+      ${u ? u.html : x.body.map(p=>`<p>${esc(p)}</p>`).join('')}
+    </article>`; };
   return `<section class="panel N">
-    <div class="ph"><h2>📰 News</h2><span class="pc">${d.news.length} stories</span></div>
+    <div class="ph"><h2>News</h2><span class="pc">${d.news.length} stories</span></div>
     ${ficFake() ? '' : `<p class="note">Recaps, previews, series and matchup stories appear as the bracket plays out. Stories with quotes or trash talk are <b>simulated</b> — real players' names are masked (e.g. Michael Jorda*) and nothing they "say" here is real.</p>`}
     ${filt}
     ${items.length ? items.map(card).join('') : `<p class="note">No stories yet. Simulate a round or play your team's games to fill the news feed.</p>`}
@@ -1581,15 +1834,15 @@ function pressPanel(){
   const d = cur();
   const items = d.press.slice().reverse(), real = !ficFake();
   return `<section class="panel P">
-    <div class="ph"><h2>🎤 Press Room</h2><span class="pc">${items.length} pressers</span></div>
-    ${real ? `<p class="note">Press conferences after every game your team plays and after every series, plus a postgame analyst show. All quotes are <b>simulated</b> — real players' names are masked (e.g. Michael Jorda*) and none of this was actually said.</p>` : ''}
+    <div class="ph"><h2>Press Room</h2><span class="pc">${items.length} pressers</span></div>
+    ${real ? `<p class="note">Press conferences and a postgame analyst show after every simulated series (your own team's games stay exactly as you write them). All quotes are <b>simulated</b> — real players' names are masked (e.g. Michael Jorda*) and none of this was actually said.</p>` : ''}
     ${items.length ? items.map(x=>{
       const T = TEAMS[x.team];
-      return `<article class="prs" style="--tc:${T.p}">
+      return `<article class="prs" style="--tc:${T.p}">${pressImage(x)}
         <div class="prh">${badge(x.team)}<div><b>${esc(T.c+' '+T.n)}</b><small>${esc(x.title)} · ${esc(roundName(x.k))}${x.score ? ` · Final ${esc(x.score)}` : ''}${x.sim ? ' · <span class="simtag">SIMULATED</span>' : ''}</small></div>${x.desk ? '' : `<span class="wl ${x.won?'w':'l'}">${x.won?'W':'L'}</span>`}</div>
         ${x.qa.map(([q, who, a])=>`<div class="qa"><p class="q"><b>${x.desk ? esc(x.host)+' (host)' : 'Reporter'}:</b> ${esc(q)}</p><p class="a"><b>${esc(who)}${x.desk ? ' (analyst)' : ''}:</b> “${esc(a)}”</p></div>`).join('')}
       </article>`;
-    }).join('') : `<p class="note">No press conferences yet. They appear after every game your team plays and after every series ends.</p>`}
+    }).join('') : `<p class="note">No press conferences yet. They appear after every simulated series ends.</p>`}
   </section>`;
 }
 function chips(id, max, small){
@@ -1607,7 +1860,7 @@ function renderHeader(){
   const sel = document.getElementById('year');
   if(!sel.options.length) sel.innerHTML = `<optgroup label="Now"><option value="${NOW}">${NOW} (Now)</option></optgroup><optgroup label="Classic (1984–2015)">${YEARS.slice(1).map(v=>`<option value="${v}">${v}</option>`).join('')}</optgroup>`;
   sel.value = y;
-  const fb = document.getElementById('ficbtn'); if(fb) fb.textContent = fic ? '🎲 Fictional: ON' : '🎲 Fictional League';
+  const fb = document.getElementById('ficbtn'); if(fb) fb.textContent = fic ? 'Fictional: ON' : 'Fictional League';
   if(fb) fb.classList.toggle('pri', fic);
 }
 function renderMy(){
@@ -1617,6 +1870,16 @@ function renderMy(){
   sel.innerHTML = `<option value="">None (sim all)</option>` + ids.map(id=>`<option value="${id}">${TEAMS[id].c} ${TEAMS[id].n}</option>`).join('');
   sel.value = myTeam();
 }
+function applyFit(){
+  const bs = document.getElementById('bscroll'), bw = document.getElementById('bwrap'), fb = document.getElementById('fitbtn'); if(!bs || !bw) return;
+  const on = !!state.fit && innerWidth<1280;
+  bs.classList.toggle('fit', on); if(fb) fb.textContent = state.fit ? '⤡ Zoom in' : '⤢ Full view';
+  if(!on){ bw.style.transform = ''; bs.style.height = ''; return; }
+  bw.style.transform = ''; bs.scrollLeft = 0; const cs = getComputedStyle(bs), avail = bs.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const s = Math.min(1, avail / Math.max(bw.offsetWidth, bw.scrollWidth));
+  bw.style.transform = `scale(${s})`; bs.style.height = Math.ceil(bw.offsetHeight*s) + 8 + 'px';
+}
+addEventListener('resize', ()=>applyFit());
 function render(){
   cur(); resolve();
   const scroll = {};
@@ -1629,6 +1892,7 @@ function render(){
   document.getElementById('newswrap').innerHTML = newsPanel();
   document.getElementById('presswrap').innerHTML = pressPanel();
   if(bs) bs.scrollLeft = bsl;
+  applyFit();
   document.getElementById('main').dataset.tab = state.tab;
   document.querySelectorAll('.tab').forEach(b=>{
     const on = b.dataset.tab===state.tab;
@@ -1816,12 +2080,12 @@ function seriesModal(k){
   const w = p.w, l = L(k), single = !isSeries(k), wins = {[w]:0, [l]:0};
   const rows = sim.games.map((g, i) => {
     const gw = g.hs>g.as ? g.h : g.a; wins[gw]++;
-    const ln = id => { const s = st(id), pts = g.pl[id]; return s && pts ? s.pl.map((x,j)=>`${esc(lastName(x.n))} ${pts[j]}`).join(' · ') : ''; };
+    const ln = id => esc(scLine(g, id)) || '—';
     const sc = (id, v) => `<span class="${gw===id?'gw':''}">${AB(id)} ${v}</span>`;
     return `<div class="gl"><div class="glh"><b>${single ? 'Game' : 'G'+(i+1)}</b><small>@${AB(g.h)}${g.ot ? ` · ${g.ot===2?'2OT':'OT'}` : ''}</small>
         <span class="gsc">${sc(g.a, g.as)} <i>–</i> ${sc(g.h, g.hs)}</span>${single ? '' : `<small class="ser">${AB(w)} ${wins[w]}-${wins[l]}</small>`}</div>
       <div class="glp"><span>${AB(g.a)}: ${ln(g.a)}</span><span>${AB(g.h)}: ${ln(g.h)}</span></div>
-      <div class="gle">${esc(g.ev)}</div>${(g.r||'').trim() ? `<div class="grp"><b>Your report:</b> ${esc(g.r.trim())}</div>` : ''}</div>`;
+      ${g.ev ? `<div class="gle">${esc(g.ev)}</div>` : ''}${(g.r||'').trim() ? `<div class="grp"><b>Your report:</b> ${esc(g.r.trim())}</div>` : ''}</div>`;
   }).join('');
   const lbox = id => { const arr = seriesLeaders(k, id); return arr.length ? `<div class="ldr"><div class="ldh">${badge(id)}<span>${TEAMS[id].n}</span></div>${arr.map(x=>`<div><span>${esc(x.n)}</span><b>${x.a.toFixed(1)}</b></div>`).join('')}</div>` : ''; };
   const mvp = seriesLeaders(k, w)[0];
@@ -1925,22 +2189,24 @@ function myModal(k){
   let games;
   if(p){ ensureSim(k); games = p.sim.games; }
   else {
-    if(!d.live || d.live.k!==k){ d.live = {k, games:[]}; newsPreview(k); save(); }
+    if(!d.live || d.live.k!==k){ d.live = {k, games:[]}; save(); }
     games = d.live.games;
   }
   const wins = {[m]:0, [opp]:0};
   games.forEach(g => { wins[g.hs>g.as ? g.h : g.a]++; });
   const done = wins[m]>=need || wins[opp]>=need;
   const fmtTxt = single ? 'Single game — win or go home' : `Best-of-${need*2-1} · first to ${need} wins advances`;
-  const ln = (g, id) => { const s = st(id), pts = g.pl[id]; return s && pts ? s.pl.map((x,j)=>`${esc(lastName(x.n))} ${pts[j]}`).join(' · ') : ''; };
+  const names = id => { const s = realSt(id, state.year), f = st(id); return [...new Set([...(f ? f.pl.map(x=>x.n) : []), ...(s ? s.pl.map(x=>x.n) : [])])]; };
+  const dl = `<datalist id="dl-m">${names(m).map(n=>`<option value="${esc(n)}">`).join('')}</datalist><datalist id="dl-o">${names(opp).map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
+  const psIn = (g, i, id, lst) => { const ps = (g.ps && g.ps[id]) || []; return [0,1,2].map(j=>`<div class="psrow"><input class="pn" data-gi="${i}" data-t="${id}" data-j="${j}" list="${lst}" maxlength="40" placeholder="${j===0 ? 'Top scorer' : 'Player'}" value="${esc((ps[j]||{}).n||'')}"><input class="pp" data-gi="${i}" data-t="${id}" data-j="${j}" type="number" inputmode="numeric" min="0" max="150" placeholder="PTS" value="${esc((ps[j]||{}).p ?? '')}"></div>`).join(''); };
   const rows = games.map((g, i) => {
     const gw = g.hs>g.as ? g.h : g.a, me = gw===m;
     return `<div class="gl"><div class="glh"><b>${single ? 'Game' : 'G'+(i+1)}</b><small>@${AB(g.h)}${g.ot ? ' · OT' : ''}</small>
       <span class="gsc"><span class="${gw===g.a?'gw':''}">${AB(g.a)} ${g.as}</span> <i>–</i> <span class="${gw===g.h?'gw':''}">${AB(g.h)} ${g.hs}</span></span>
       <span class="wl ${me?'w':'l'}">${me?'W':'L'}</span></div>
-      <div class="glp"><span>${AB(m)}: ${ln(g, m)}</span><span>${AB(opp)}: ${ln(g, opp)}</span></div>
-      <div class="gle">${esc(g.ev||'')}</div>
-      <textarea class="st grep" data-gi="${i}" maxlength="2000" placeholder="Your Game ${single ? '' : i+1} report — what happened? Key plays, who stepped up, the turning point...">${esc(g.r||'')}</textarea></div>`;
+      <div class="myscore"><div><b>${AB(m)} SCORERS</b>${psIn(g, i, m, 'dl-m')}</div><div><b>${AB(opp)} SCORERS</b>${psIn(g, i, opp, 'dl-o')}</div></div>
+      <textarea class="st grep" data-gi="${i}" maxlength="2000" placeholder="Your Game ${single ? '' : i+1} report — what happened? Key plays, who stepped up, the turning point...">${esc(g.r||'')}</textarea>
+      <input class="pimg" data-gi="${i}" maxlength="500" placeholder="Photo link for this game (optional) — paste an image URL" value="${esc(g.img||'')}"></div>`;
   }).join('');
   const n = games.length, nextHome = pat[n]===0 ? home : away, nextAway = nextHome===home ? away : home;
   const ex = expect(nextHome, nextAway), exM = Math.round(m===nextHome ? ex.eh : ex.ea), exO = Math.round(m===nextHome ? ex.ea : ex.eh);
@@ -1960,8 +2226,8 @@ function myModal(k){
   openModal(`🎮 ${roundName(k)}`, `
     <div class="sres"><small>${state.year}${ficOn() ? ' · Fictional' : ''} · ${fmtTxt}</small></div>
     <div class="mysb"><div class="mys">${badge(m)}<span>${esc(TEAMS[m].n)}</span><b>${wins[m]}</b></div><i>vs</i><div class="mys">${badge(opp)}<span>${esc(TEAMS[opp].n)}</span><b>${wins[opp]}</b></div></div>
-    ${banner}${rows}${sumBox}
-    ${!n ? `<div class="tnote">Play your ${qlen()}-minute-quarter game, then enter the final score for both teams. Player points are estimated from each team's scorers. Placeholders show the expected score. A preview just dropped in 📰 News.</div>` : ''}
+    ${dl}${banner}${rows}${sumBox}
+    ${!n ? `<div class="tnote">Play your ${qlen()}-minute-quarter game, then enter the final score for both teams. After saving, add the scorers for both teams, your game report and an optional photo link — nothing is written for you.</div>` : ''}
     ${done ? `<div class="aibar"><button class="btn" id="my-print">🖨️ Print series report</button><button class="btn ghost" id="my-run">🖨️ Full playoff run</button></div>` : ''}
   `, done ? [
     {label:'🔄 Redo series', cls:'ghost', fn:()=>{ delete PK()[k]; d.live = null; dropMedia(k); resolve(); save(); setTimeout(()=>myModal(k), 30); }},
@@ -1971,6 +2237,13 @@ function myModal(k){
     {label:'Close', cls:'ghost'}
   ], ()=>{ if(PK()[k]) refreshMyStory(k); save(); render(); });
   document.querySelectorAll('#mbody .grep').forEach(ta => ta.addEventListener('input', () => { games[+ta.dataset.gi].r = ta.value; if(PK()[k]) refreshMyStory(k); save(); }));
+  document.querySelectorAll('#mbody .pn, #mbody .pp').forEach(el => el.addEventListener('input', () => {
+    const g = games[+el.dataset.gi], t = el.dataset.t, j = +el.dataset.j;
+    if(!g.ps) g.ps = {}; if(!g.ps[t]) g.ps[t] = [{},{},{}]; if(!g.ps[t][j]) g.ps[t][j] = {};
+    if(el.classList.contains('pn')) g.ps[t][j].n = el.value.trim(); else g.ps[t][j].p = el.value==='' ? '' : Math.max(0, parseInt(el.value, 10) || 0);
+    if(PK()[k]) refreshMyStory(k); save();
+  }));
+  document.querySelectorAll('#mbody .pimg').forEach(el => el.addEventListener('input', () => { games[+el.dataset.gi].img = el.value.trim(); save(); }));
   const sm = document.getElementById('my-sum');
   if(sm) sm.addEventListener('input', () => { PK()[k].sum = sm.value; refreshMyStory(k); save(); });
   if(done){ document.getElementById('my-print').onclick = () => openReport([k]); document.getElementById('my-run').onclick = () => openReport(myKeys()); return; }
@@ -1978,17 +2251,16 @@ function myModal(k){
     games.push(g);
     const gw = g.hs>g.as ? g.h : g.a; wins[gw]++;
     const last = wins[m]>=need || wins[opp]>=need;
-    g.ev = gameEvent(g, games.length, need, last, single);
-    newsGame(k, games.length-1, games, true);
-    pressGame(k, games.length-1, games); if(!ficFake()) deskGame(k, games.length-1, games);
+    g.pl = {}; g.ev = ''; g.ps = {[m]:[{},{},{}], [opp]:[{},{},{}]};
+    addNews({k, gi:games.length-1, t:'MY GAME', user:1, teams:[m, opp], head:'', body:[]});
     if(last){
       const w = wins[m]>=need ? m : opp, l = w===m ? opp : m;
       PK()[k] = {w, g: single ? null : games.length, sim:{w, l, games: games.slice()}};
-      d.live = null; resolve(); refreshMyStory(k); mediaForSeries(k);
+      d.live = null; resolve(); refreshMyStory(k); addNews({k, t:'MY SERIES', user:1, teams:[w, l], head:'', body:[]});
       if(k==='F' && w===m) setTimeout(celebrate, 200);
     }
     save(); myModal(k);
-    setTimeout(()=>{ const ta = document.querySelector(`#mbody .grep[data-gi="${games.length-1}"]`); if(ta){ ta.scrollIntoView({block:'center'}); ta.focus({preventScroll:true}); } }, 60);
+    setTimeout(()=>{ const ta = document.querySelector(`#mbody .pn[data-gi="${games.length-1}"]`); if(ta){ ta.scrollIntoView({block:'center'}); ta.focus({preventScroll:true}); } }, 60);
   };
   document.getElementById('sc-save').onclick = () => {
     const a = parseInt(document.getElementById('sc-m').value, 10), b = parseInt(document.getElementById('sc-o').value, 10), msg = document.getElementById('sc-msg');
@@ -2018,7 +2290,7 @@ function reportHTML(keys){
     const w = p.w, l = L(k), games = p.sim.games, single = !isSeries(k), wins = {[w]:0, [l]:0};
     const gl = games.map((g, i) => {
       const gw = g.hs>g.as ? g.h : g.a; wins[gw]++;
-      const tops = id => { const s = st(id), pts = g.pl[id]; return s && pts ? s.pl.map((x,j)=>`${e(x.n)} ${pts[j]}`).join(', ') : ''; };
+      const tops = id => e(scLine(g, id, true).split(' · ').join(', ')) || '—';
       return `<tr class="gr"><td><b>${single ? 'Game' : 'G'+(i+1)}</b></td><td>@${AB(g.h)}</td><td><span class="${gw===g.a?'win':''}">${AB(g.a)} ${g.as}</span> – <span class="${gw===g.h?'win':''}">${AB(g.h)} ${g.hs}</span>${g.ot ? ' (OT)' : ''}</td><td>${m ? (gw===m ? '<span class="w">W</span>' : '<span class="l">L</span>') : ''}</td><td class="sm">${AB(g.a)}: ${tops(g.a)}<br>${AB(g.h)}: ${tops(g.h)}</td></tr>
         <tr class="gn"><td></td><td colspan="4"><i>${e(g.ev||'')}</i>${(g.r||'').trim() ? `<div class="rep"><b>Report:</b> ${e(g.r.trim()).replace(/\n/g,'<br>')}</div>` : ''}</td></tr>`;
     }).join('');
@@ -2090,6 +2362,8 @@ document.addEventListener('click', e=>{
   const nf = e.target.closest('[data-nf]');
   if(nf){ state.nf = nf.dataset.nf; save(); render(); return; }
   const tb = e.target.closest('.tab');
+  const phb = e.target.closest('[data-photo]');
+  if(phb){ photoModal(phb.dataset.photo); return; }
   const jb = e.target.closest('[data-jump]');
   if(jb){ const bs = document.getElementById('bscroll'), pn = document.querySelector('#bwrap .panel.'+jb.dataset.jump);
     if(bs && pn) bs.scrollTo({left: Math.max(0, pn.offsetLeft - (bs.clientWidth - pn.offsetWidth)/2), behavior:'smooth'}); return; }
@@ -2104,6 +2378,7 @@ document.addEventListener('click', e=>{
     case 'code': codeModal(); break;
     case 'myreport': openReport(myKeys()); break;
     case 'reveal': cur().rev = !cur().rev; save(); render(); break;
+    case 'fit': state.fit = !state.fit; save(); applyFit(); break;
     case 'reset': openModal(`Reset ${state.year} bracket?`, `<p>This clears all your ${state.year} picks, stories, news and press conferences${ficOn() ? ' (your fictional league stays)' : ''}. Other seasons aren't touched.</p>`, [
         {label:'Cancel', cls:'ghost'},
         {label:'Yes, reset', cls:'pri', fn:()=>{ const d = cur(), my = d.my; resetSeason(); d.my = my; save(); render(); toast('↺ Bracket reset'); }}

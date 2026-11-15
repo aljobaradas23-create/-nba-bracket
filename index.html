@@ -15,7 +15,7 @@
 <title>Playoff Bracket</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800;1,900&family=UnifrakturMaguntia&family=Playfair+Display:wght@700;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--line:rgba(255,255,255,.16);--tx:#f3f5f9;--mut:#9aa4b8;--gold:#f4c64e;--gap:26px;--stub:13px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -144,6 +144,57 @@ button.team:active{transform:scale(.98)}
 .cc{font-weight:700;font-size:15px;color:#c9d0dc;margin-top:4px}
 .cq{font-weight:700;font-style:italic;font-size:16px;color:#8f9ab0;margin-top:6px}
 @media (max-width:480px){ h1{font-size:46px} .ph h2{font-size:24px} }
+.trophy.on{cursor:pointer}
+.np-open{margin-top:12px;font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;border-radius:99px;background:#f3ecdc;color:#1b1b1b;border:1px solid #fff}
+/* ---------- newspaper ---------- */
+.paper{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(18px + env(safe-area-inset-top)) 10px 30px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.paper[hidden]{display:none}
+.np{position:relative;max-width:860px;margin:0 auto;color:#1b1914;padding:18px 20px 16px;border-radius:2px;
+  background:radial-gradient(120% 80% at 50% 0%, #f7f1e3, #ece2cc 70%, #e2d5b8);box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 0 80px rgba(120,90,40,.18);
+  font-family:'Libre Baskerville',Georgia,'Times New Roman',serif;animation:npIn .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes npIn{0%{transform:rotate(-720deg) scale(.05);opacity:0}70%{opacity:1}100%{transform:rotate(0) scale(1)}}
+.np::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background:repeating-linear-gradient(0deg, rgba(0,0,0,.025) 0 1px, transparent 1px 3px)}
+.np-x{position:absolute;top:8px;right:10px;width:34px;height:34px;border-radius:50%;background:#1b1914;color:#f3ecdc;font-size:16px;font-family:system-ui;z-index:2}
+.np-top{display:flex;justify-content:space-between;gap:8px;font-family:Georgia,serif;font-size:11px;letter-spacing:.12em;border-bottom:1px solid #1b1914;padding:0 40px 4px 0}
+.np-mast{font-family:'UnifrakturMaguntia','Old English Text MT',Georgia,serif;font-size:62px;line-height:1.05;text-align:center;margin:6px 0 2px;letter-spacing:.01em}
+.np-sub{display:flex;justify-content:space-between;font-style:italic;font-size:12px;border-top:3px double #1b1914;border-bottom:3px double #1b1914;padding:4px 2px}
+.np-h{text-shadow:none;font-style:normal;color:#1b1914;font-family:'Playfair Display',Georgia,serif;font-weight:900;font-size:68px;line-height:.95;text-align:center;margin:14px 0 6px;letter-spacing:-.01em;text-transform:uppercase}
+.np-deck{text-align:center;font-style:italic;font-size:18px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #1b1914}
+.np-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px}
+.np-photo{margin:0 0 8px}
+.np-pimg{position:relative;height:260px;border:1px solid #1b1914;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:radial-gradient(circle at 50% 40%, #6d6658, #2b2822 70%);}
+.np-pimg::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(0,0,0,.35) 1px, transparent 1.3px) 0 0/4px 4px;mix-blend-mode:multiply}
+.np-pimg img{height:92%;filter:grayscale(1) contrast(1.25) brightness(1.05) drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+.np-tag{position:absolute;left:10px;bottom:8px;font-family:'Playfair Display',Georgia,serif;font-weight:900;font-size:44px;color:rgba(255,255,255,.18)}
+.np-photo figcaption{font-size:12px;font-style:italic;margin-top:4px;color:#3b372d}
+.np-by{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:6px 0;border-bottom:1px solid rgba(0,0,0,.25);padding-bottom:4px}
+.np-body{column-count:2;column-gap:18px;column-rule:1px solid rgba(0,0,0,.2)}
+.np-body p{font-size:14px;line-height:1.6;margin:0 0 10px;text-align:justify;hyphens:auto}
+.dropcap{font-weight:700;letter-spacing:.06em}
+.np-body p:first-child::first-letter{float:left;font-family:'Playfair Display',Georgia,serif;font-weight:900;font-size:52px;line-height:.8;padding:4px 6px 0 0}
+.np-side{border-left:1px solid #1b1914;padding-left:16px}
+.np-box{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.3)}
+.np-box h3{font-family:'Playfair Display',Georgia,serif;font-weight:900;font-size:19px;text-transform:uppercase;border-bottom:2px solid #1b1914;margin-bottom:6px;padding-bottom:2px}
+.np-box table{width:100%;border-collapse:collapse;font-size:13px}
+.np-box td{padding:4px 2px;border-bottom:1px dotted rgba(0,0,0,.35)}
+.np-box td:last-child{text-align:right}
+.np-box ul{list-style:none;font-size:13px;line-height:1.7}
+.np-box ul b{font-family:'Playfair Display',Georgia,serif;font-size:16px}
+.np-box p{font-size:13px;line-height:1.55;margin-bottom:8px}
+.np-small p{font-size:12.5px}
+.np-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border-top:3px double #1b1914;padding-top:6px;margin-top:4px}
+@media (max-width:640px){
+  .np{padding:14px 12px}
+  .np-mast{font-size:38px}
+  .np-h{font-size:42px}
+  .np-deck{font-size:15px}
+  .np-grid{grid-template-columns:1fr}
+  .np-side{border-left:0;padding-left:0;border-top:2px solid #1b1914;padding-top:10px}
+  .np-body{column-count:1}
+  .np-pimg{height:210px}
+  .np-top{font-size:9px}
+}
 @media (min-width:1280px){ .bwrap{min-width:0} .bscroll{overflow:visible} .fitbtn{display:none} }
 </style>
 </head>
@@ -164,6 +215,7 @@ button.team:active{transform:scale(.98)}
   <div class="hint" id="hint"></div>
 </header>
 <div class="sheet" id="sheet" hidden></div>
+<div class="paper" id="paper" hidden></div>
 <main><div class="editor" id="editor" hidden></div><div class="bscroll" id="bscroll"><div class="bwrap" id="bwrap"></div></div></main>
 <script>
 const TEAMS={"LAL":{"c":"Los Angeles","n":"Lakers","p":"#552583","s":"#FDB927","a":"LAL"},"SAS":{"c":"San Antonio","n":"Spurs","p":"#2a2a2a","s":"#C4CED4","a":"SAS"},"MIN":{"c":"Minnesota","n":"Timberwolves","p":"#0C2340","s":"#78BE20","a":"MIN"},"HOU":{"c":"Houston","n":"Rockets","p":"#CE1141","s":"#C4CED4","a":"HOU"},"OKC":{"c":"Oklahoma City","n":"Thunder","p":"#007AC1","s":"#EF3B24","a":"OKC"},"GSW":{"c":"Golden State","n":"Warriors","p":"#1D428A","s":"#FFC72C","a":"GSW"},"MEM":{"c":"Memphis","n":"Grizzlies","p":"#5D76A9","s":"#12173F","a":"MEM"},"POR":{"c":"Portland","n":"Trail Blazers","p":"#E03A3E","s":"#111111","a":"POR"},"DAL":{"c":"Dallas","n":"Mavericks","p":"#00538C","s":"#B8C4CA","a":"DAL"},"DEN":{"c":"Denver","n":"Nuggets","p":"#0E2240","s":"#FEC524","a":"DEN"},"PHX":{"c":"Phoenix","n":"Suns","p":"#1D1160","s":"#E56020","a":"PHX"},"NOP":{"c":"New Orleans","n":"Pelicans","p":"#0C2340","s":"#C8102E","a":"NOP"},"LAC":{"c":"LA","n":"Clippers","p":"#C8102E","s":"#1D428A","a":"LAC"},"SAC":{"c":"Sacramento","n":"Kings","p":"#5A2D81","s":"#C4CED4","a":"SAC"},"UTA":{"c":"Utah","n":"Jazz","p":"#4B2A85","s":"#F9A01B","a":"UTA"},"BOS":{"c":"Boston","n":"Celtics","p":"#007A33","s":"#BA9653","a":"BOS"},"PHI":{"c":"Philadelphia","n":"76ers","p":"#006BB6","s":"#ED174C","a":"PHI"},"DET":{"c":"Detroit","n":"Pistons","p":"#C8102E","s":"#1D42BA","a":"DET"},"NYK":{"c":"New York","n":"Knicks","p":"#006BB6","s":"#F58426","a":"NYK"},"ATL":{"c":"Atlanta","n":"Hawks","p":"#E03A3E","s":"#C1D32F","a":"ATL"},"TOR":{"c":"Toronto","n":"Raptors","p":"#CE1141","s":"#111111","a":"TOR"},"CLE":{"c":"Cleveland","n":"Cavaliers","p":"#860038","s":"#FDBB30","a":"CLE"},"MIA":{"c":"Miami","n":"Heat","p":"#98002E","s":"#F9A01B","a":"MIA"},"CHA":{"c":"Charlotte","n":"Hornets","p":"#1D1160","s":"#00788C","a":"CHA"},"WAS":{"c":"Washington","n":"Wizards","p":"#002B5C","s":"#E31837","a":"WAS"},"ORL":{"c":"Orlando","n":"Magic","p":"#0077C0","s":"#C4CED4","a":"ORL"},"IND":{"c":"Indiana","n":"Pacers","p":"#002D62","s":"#FDBB30","a":"IND"},"BKN":{"c":"Brooklyn","n":"Nets","p":"#111111","s":"#FFFFFF","a":"BKN"},"CHI":{"c":"Chicago","n":"Bulls","p":"#CE1141","s":"#111111","a":"CHI"},"MIL":{"c":"Milwaukee","n":"Bucks","p":"#00471B","s":"#EEE1C6","a":"MIL"},"KCK":{"c":"Kansas City","n":"Kings","p":"#0046AD","s":"#E03A3E","a":"KCK"},"SEA":{"c":"Seattle","n":"SuperSonics","p":"#00653A","s":"#FFC200","a":"SEA"},"WSB":{"c":"Washington","n":"Bullets","p":"#002566","s":"#E31837","a":"WSB"},"NJN":{"c":"New Jersey","n":"Nets","p":"#002A60","s":"#CD1041","a":"NJN"},"CHH":{"c":"Charlotte","n":"Hornets","p":"#00778B","s":"#4B2A85","a":"CHH"},"NOH":{"c":"New Orleans","n":"Hornets","p":"#00778B","s":"#FDB927","a":"NOH"},"CHB":{"c":"Charlotte","n":"Bobcats","p":"#2E5A88","s":"#F26532","a":"CHA"},"SDC":{"c":"San Diego","n":"Clippers","p":"#ED174C","s":"#006BB6","a":"SDC"},"VAN":{"c":"Vancouver","n":"Grizzlies","p":"#00B2A9","s":"#E43C40","a":"VAN"},"NOK":{"c":"New Orleans/OKC","n":"Hornets","p":"#00778B","s":"#FDB927","a":"NOK"}};
@@ -269,7 +321,7 @@ function finalsPanel(){
   let box;
   if(p){
     const T = TEAMS[p.w], l = parts('F').find(t=>t!==p.w);
-    box = `<div class="trophy on" style="--tc:${T.p}">${TROPHY}<div class="ck">${y} CHAMPIONS</div><div class="cn">${esc(T.c)}<br>${esc(T.n)}</div><div class="cc">def. ${esc(TEAMS[l].n)} ${p.s[p.w]}-${p.s[l]||0}</div></div>`;
+    box = `<div class="trophy on" style="--tc:${T.p}">${TROPHY}<div class="ck">${y} CHAMPIONS</div><div class="cn">${esc(T.c)}<br>${esc(T.n)}</div><button class="np-open" data-paper="open">📰 Read the Paper</button></div>`;
   } else box = `<div class="trophy">${TROPHY}<div class="ck">${y} CHAMPIONS</div><div class="cq">Who's lifting the trophy?</div></div>`;
   return `<section class="panel F"><div class="ph fin"><h2><small>${y}</small>Finals</h2></div>
     <div class="fmu"><div class="rl">THE FINALS</div>${matchup('F', ['West champion','East champion'])}</div>${box}</section>`;
@@ -336,6 +388,81 @@ function rollSeeding(){
   for(const c of ['W','E']) confTeams(c).forEach(id=>{ const w = Math.max(Math.round(G*.15), Math.min(Math.round(G*.85), Math.round(G/2 + rn()*G*.15))); d.rec[id] = `${w}-${G-w}`; });
   d.picks = {}; reseed(); render();
 }
+/* ================= CHAMPIONSHIP NEWSPAPER ================= */
+function rngFor(str){ let h = 1779033703 ^ str.length; for(const c of str){ h = Math.imul(h ^ c.charCodeAt(0), 3432918353); h = h << 13 | h >>> 19; }
+  return () => { h = Math.imul(h ^ h >>> 16, 2246822507); h = Math.imul(h ^ h >>> 13, 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
+const ROUND_LONG = k => k==='F' ? 'NBA Finals' : k.slice(1)==='CF' ? `${k[0]==='W' ? 'Western' : 'Eastern'} Conference Finals` : k.includes('R2') ? 'Conference Semifinals' : 'First Round';
+function pathOf(id){
+  const sd = seedOf(id), c = sd.c, out = [];
+  const keys = [c+'R1A', c+'R1B', c+'R1C', c+'R1D', c+'R2A', c+'R2B', c+'CF', 'F'];
+  for(const k of keys){ const p = normPick(k); if(!p || p.w!==id) continue; const opp = parts(k).find(x=>x!==id); out.push({k, opp, w:p.s[id], l:p.s[opp]||0}); }
+  return out;
+}
+const NUMW = ['zero','one','two','three','four','five','six','seven'];
+function newspaperHTML(){
+  const p = normPick('F'); if(!p || !p.w) return '';
+  const y = state.year, id = p.w, T = TEAMS[id], sd = seedOf(id), opp = parts('F').find(x=>x!==id), O = TEAMS[opp], so = seedOf(opp);
+  const R = rngFor(y + id + opp + JSON.stringify(p.s)), pk = a => a[Math.floor(R()*a.length)];
+  const path = pathOf(id), oppPath = pathOf(opp).filter(x=>x.k!=='F');
+  const fw = p.s[id], fl = p.s[opp] || 0, gamesF = fw + fl;
+  const totW = path.reduce((s, x)=>s+x.w, 0), totL = path.reduce((s, x)=>s+x.l, 0);
+  const sweeps = path.filter(x=>x.l===0).length, longest = path.slice().sort((a, b)=>(b.w+b.l)-(a.w+a.l))[0];
+  const conf = sd.c==='W' ? 'West' : 'East', oconf = so.c==='W' ? 'West' : 'East';
+  const rec = recOf(id), orec = recOf(opp), full = need()*2-1;
+  const upsets = path.filter(x=>x.k!=='F' && seedOf(x.opp).s < sd.s);
+  const perfect = sweeps===path.length && path.length>0;
+  const nick = T.n, NICK = T.n.toUpperCase();
+  const head = perfect ? pk([`PERFECT!`, `UNBEATABLE`, `${NICK}: FLAWLESS`])
+    : sd.s>=5 ? pk([`CINDERELLA ${NICK}`, `LONG SHOT TO LEGENDS`, `${NICK} SHOCK THE WORLD`])
+    : gamesF===full ? pk([`GAME ${full} GLORY`, `${NICK} SURVIVE!`, `TO THE LAST SHOT`])
+    : sd.s===1 ? pk([`${NICK} ON TOP OF THE WORLD`, `THE KINGS OF THE ${conf.toUpperCase()} RULE IT ALL`, `${NICK} REIGN`])
+    : pk([`${NICK} ARE CHAMPIONS`, `${T.c.toUpperCase()} CELEBRATES`, `TITLE TOWN: ${T.c.toUpperCase()}`]);
+  const deck = `${T.c} beats ${O.c} ${fw}-${fl} in the Finals to capture the ${y} championship`;
+  const byl = pk(['Marcus Delacroix','Renee Whitfield','Tomas Oduya','Grace Calloway','Victor Lindqvist','Hannah Pruitt']);
+  const fans = [pk(['Marisol Reyes','Darnell Brooks','Kenji Watanabe','Patrick O’Shea','Aaliyah Grant','Luis Ortega']), pk(['Bernadette Cruz','Oscar Feld','Tamika Hollis','Rafael Santos','Jun Dela Rosa','Ingrid Halvorsen'])];
+  const roadLine = path.filter(x=>x.k!=='F').map(x=>`${x.l===0 ? 'swept' : 'beat'} the ${TEAMS[x.opp].n} ${x.w}-${x.l}`);
+  const roadTxt = roadLine.length ? roadLine.slice(0,-1).join(', ') + (roadLine.length>1 ? ' and ' : '') + roadLine[roadLine.length-1] : '';
+  const P = [];
+  P.push(`<span class="dropcap">${esc(T.c.toUpperCase())}</span> — The ${esc(T.c)} ${esc(nick)} are the ${y} NBA champions. They finished off the ${esc(O.c)} ${esc(O.n)} ${fw}-${fl} in the Finals${gamesF===full ? `, surviving a winner-take-all Game ${full}` : fl===0 ? ' without dropping a single game' : `, closing out the series in Game ${gamesF}`}, and completed a ${totW}-${totL} run through the playoffs as the No. ${sd.s} seed in the ${conf}.`);
+  P.push(`${rec ? `It began with a ${esc(rec)} regular season${sd.s===1 ? `, good for the top seed in the ${conf}` : sd.s<=4 ? `, enough to secure home court in the first round` : `, and few outside the locker room gave them much of a chance`}. ` : ''}${pk([`From the opening tip of the playoffs, this group played like it had something to prove.`, `What followed was a spring that ${esc(T.c)} will not soon forget.`, `Nobody in the league wanted to see them in a seven-game series, and it showed.`])}`);
+  if(roadTxt) P.push(`On the road to the Finals, the ${esc(nick)} ${roadTxt}. ${longest && longest.l>=need()-1 && longest.k!=='F' ? `The toughest test came in the ${ROUND_LONG(longest.k)} against the ${esc(TEAMS[longest.opp].n)}, a series that went the full ${longest.w+longest.l} games and tested every bit of their resolve.` : sweeps ? `They ${sweeps>1 ? `swept ${NUMW[sweeps]} series` : 'pulled off a sweep'} along the way, a sign of just how dominant they were.` : `Each round brought a new challenge, and each time they found an answer.`}${upsets.length ? ` Along the way they knocked off the higher-seeded ${upsets.map(x=>esc(TEAMS[x.opp].n)).join(' and ')}.` : ''}`);
+  P.push(`In the Finals they met the ${esc(O.n)}, the No. ${so.s} seed from the ${oconf}${orec ? ` (${esc(orec)})` : ''}${oppPath.length ? `, who had reached this stage by getting past the ${oppPath.map(x=>esc(TEAMS[x.opp].n)).join(', the ').replace(/, the ([^,]*)$/, ' and the $1')}` : ''}. ${fl===0 ? pk([`It was never close. The ${esc(nick)} controlled every game from start to finish.`, `The ${esc(O.n)} never found an answer, and the sweep was complete in four.`]) : gamesF===full ? pk([`It came down to one game for everything, and the ${esc(nick)} delivered when it mattered most.`, `Both teams traded blows for ${full} games before the ${esc(nick)} finally pulled away.`]) : pk([`The ${esc(O.n)} pushed back and won ${NUMW[fl]} game${fl>1?'s':''}, but the ${esc(nick)} always had a response.`, `The ${esc(O.n)} made it a fight, but the ${esc(nick)} were simply too much over the long haul.`])}`);
+  P.push(pk([`When the final buzzer sounded, the bench emptied onto the floor and confetti rained down from the rafters.`, `As the final seconds ticked away, the celebration started on the court and spilled into the streets of ${esc(T.c)}.`, `The trophy was raised moments later, and the roar from the crowd could be heard blocks away.`]) + ` ` + pk([`A championship parade is expected later this week.`, `City officials say a parade route will be announced in the coming days.`, `For a city that has waited for this moment, the party is only getting started.`]));
+  const rows = path.map(x=>`<tr><td>${ROUND_LONG(x.k).replace('Conference ','Conf. ')}</td><td>${esc(TEAMS[x.opp].n)}</td><td><b>${x.w}-${x.l}</b></td></tr>`).join('');
+  const cityPop = R()<.5 ? 'Downtown' : 'Main Street';
+  return `<div class="np" role="dialog" aria-label="Championship newspaper">
+    <button class="np-x" data-paper="close" aria-label="Close">✕</button>
+    <div class="np-top"><span>VOL. ${y-1946} · No. ${100+Math.floor(R()*800)}</span><span>CHAMPIONSHIP EDITION</span><span>JUNE ${y} · 25¢</span></div>
+    <div class="np-mast">The Hardwood Herald</div>
+    <div class="np-sub"><span>“All the News That’s Fit to Dunk”</span><span>Final Edition</span></div>
+    <h1 class="np-h">${esc(head)}</h1>
+    <div class="np-deck">${esc(deck)}</div>
+    <div class="np-grid">
+      <div class="np-main">
+        <figure class="np-photo" style="--tc:${T.p}"><div class="np-pimg"><img src="${TROPHY_SRC}" alt=""><span class="np-tag">${esc(AB(id))}</span></div>
+          <figcaption>The championship trophy is headed to ${esc(T.c)} after the ${esc(nick)} defeated the ${esc(O.n)} ${fw}-${fl}.</figcaption></figure>
+        <div class="np-by">By ${esc(byl)} · Herald Staff Writer</div>
+        <div class="np-body">${P.map(t=>`<p>${t}</p>`).join('')}</div>
+      </div>
+      <aside class="np-side">
+        <div class="np-box"><h3>Road to the Title</h3><table>${rows}</table></div>
+        <div class="np-box"><h3>By the Numbers</h3><ul>
+          <li><b>${totW}-${totL}</b> playoff record</li>
+          <li><b>${path.length}</b> series won</li>
+          <li><b>${totW+totL}</b> playoff games played</li>
+          <li><b>${sweeps}</b> sweep${sweeps===1?'':'s'}</li>
+          <li><b>No. ${sd.s}</b> seed, ${conf}</li>${rec ? `<li><b>${esc(rec)}</b> regular season</li>` : ''}</ul></div>
+        <div class="np-box"><h3>Fan Voices</h3>
+          <p>“${pk(['I have waited my whole life for this night. I am not going to sleep.', 'My dad took me to my first game. I wish he could see this.', 'Nobody believed in us. Look at us now!'])}”<br><i>— ${fans[0]}, ${esc(T.c)}</i></p>
+          <p>“${pk(['I am taking the whole week off work. The parade is mandatory.', 'This team played for each other. That is why they won.', 'Champions! Say it again — champions!'])}”<br><i>— ${fans[1]}, ${cityPop}</i></p></div>
+        <div class="np-box np-small"><h3>${esc(O.n)} Fall Short</h3><p>The ${esc(O.c)} ${esc(O.n)} ${oppPath.length ? `won ${NUMW[oppPath.length]} series to reach the Finals` : 'reached the Finals'} but could not finish the job, taking ${NUMW[fl]} game${fl===1?'':'s'} in the series. Their offseason begins now.</p></div>
+      </aside>
+    </div>
+    <div class="np-foot"><span>INSIDE: Parade route · Championship bracket · Souvenir poster</span><span>Weather: Confetti, 100% chance</span></div>
+  </div>`;
+}
+function openPaper(){ const el = document.getElementById('paper'), html = newspaperHTML(); if(!html) return; el.innerHTML = html; el.hidden = false; el.scrollTop = 0; document.body.style.overflow = 'hidden'; }
+function closePaper(){ const el = document.getElementById('paper'); el.hidden = true; el.innerHTML = ''; document.body.style.overflow = ''; }
 function applyFit(){
   const bs = document.getElementById('bscroll'), bw = document.getElementById('bwrap'), fb = document.getElementById('fit');
   const on = !!state.fit && !state.edit && innerWidth < 1280;
@@ -369,6 +496,10 @@ function render(keepEditor){
 /* ================= EVENTS ================= */
 document.addEventListener('click', e=>{
   if(e.target.closest('#done')){ state.edit = false; render(); return; }
+  const pb = e.target.closest('[data-paper]');
+  if(pb){ pb.dataset.paper==='open' ? openPaper() : closePaper(); return; }
+  if(e.target.id==='paper'){ closePaper(); return; }
+  if(e.target.closest('.trophy.on') && !e.target.closest('button')){ openPaper(); return; }
   const stp = e.target.closest('[data-step]');
   if(stp){ stepScore(stp.dataset.step, +stp.dataset.d); return; }
   const shb = e.target.closest('[data-sheet]');
@@ -409,7 +540,7 @@ document.addEventListener('change', e=>{
 document.getElementById('year').onchange = e => { state.year = e.target.value; render(); };
 document.getElementById('fmt').onchange = e => { state.fmt = e.target.value; render(); };
 document.getElementById('dice').onclick = rollSeeding;
-document.addEventListener('keydown', e => { if(e.key==='Escape' && sheetK) closeSheet(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ if(sheetK) closeSheet(); if(!document.getElementById('paper').hidden) closePaper(); } });
 document.getElementById('edit').onclick = () => { state.edit = !state.edit; render(); };
 document.getElementById('real').onclick = () => { const d = cur(); d.seeds = {W:HIST[state.year].W.slice(0,8), E:HIST[state.year].E.slice(0,8)}; d.picks = {}; d.rec = {}; render(); };
 document.getElementById('clear').onclick = () => { cur().picks = {}; render(); };

@@ -53,6 +53,12 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 .er em{font-style:normal;color:var(--mut);text-align:center;font-weight:800}
 .ehead{display:grid;grid-template-columns:24px 44px minmax(0,1fr) 44px 44px 38px 30px;gap:5px;font-weight:800;font-size:11px;letter-spacing:.12em;color:var(--mut)}
 .ehead span:nth-child(n+4){text-align:center}
+.thead2,.tr2{display:grid;grid-template-columns:44px 50px minmax(0,1fr);gap:8px;align-items:center}
+.thead2{font-weight:800;font-size:11px;letter-spacing:.12em;color:var(--mut)}
+.tr2{margin-top:6px}
+.tr2 .en{font-weight:900;font-style:italic;font-size:16px;color:var(--gold);text-align:center}
+.tr2 .tile{width:50px;height:32px;font-size:16px}
+.tr2 select{width:100%;min-width:0;background:#070a12;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:9px 8px;font-weight:700;font-size:16px;color:#fff}
 .eact{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 @media (max-width:700px){ .editor{grid-template-columns:1fr} }
 
@@ -112,11 +118,44 @@ button.team:active{transform:scale(.98)}
 .srow2.w{border-color:var(--gold);background:rgba(244,198,78,.1)}
 .snm{flex:1;min-width:0;font-weight:700;font-size:13px;color:#c9d0dc;line-height:1.1}
 .snm b{font-weight:900;font-style:italic;font-size:19px;color:#fff}
-.stp{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);font-weight:900;font-size:24px;line-height:1}
+.stp-old{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);font-weight:900;font-size:24px;line-height:1}
 .stp:disabled{opacity:.3}
 .snum{min-width:34px;text-align:center;font-weight:900;font-style:italic;font-size:34px}
 .sh-st{text-align:center;font-weight:800;font-size:16px;color:var(--gold);margin:12px 0 4px}
 .sh-b{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.tile{position:relative}
+.hm{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#fff;color:#0a0d16;font-style:normal;font-weight:900;font-size:10px;line-height:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.6);text-shadow:none}
+.panel.E .hm{right:auto;left:-6px}
+.sheet{align-items:flex-start;overflow-y:auto}
+.sheet-card{margin:auto 0}
+.hc{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:13px;color:#c9d0dc;line-height:1.25}
+.hc>span:nth-child(2){flex:1}
+.hc b{color:#fff;font-size:15px}
+.hc .tile{width:44px;height:30px;font-size:15px}
+.hc .btn{padding:7px 10px;font-size:12px}
+.sc2{display:flex;justify-content:center;align-items:baseline;gap:12px;margin:10px 0 4px;font-weight:800;font-size:18px;color:#c9d0dc}
+.sc2 b{font-weight:900;font-style:italic;font-size:38px;color:#fff}
+.sc2 i{font-style:normal;font-size:24px;color:var(--mut)}
+.glist{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.grow{display:grid;grid-template-columns:30px minmax(0,1fr) 100px 100px;gap:6px;align-items:center;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.grow.next{border-color:rgba(244,198,78,.5);background:rgba(244,198,78,.06)}
+.gno{font-weight:900;font-style:italic;font-size:17px}
+.gat{font-weight:800;font-size:15px;line-height:1.1;min-width:0}
+.gat i{display:block;font-style:normal;font-weight:600;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gpick{position:relative;display:flex;align-items:center;justify-content:center;height:40px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);opacity:.55}
+.gpick .tile{width:46px;height:28px;font-size:14px}
+.gpick.on{opacity:1;border-color:#fff;background:rgba(255,255,255,.12)}
+.gpick b{position:absolute;top:-6px;right:-4px;background:var(--gold);color:#1b1300;font-size:10px;font-weight:900;border-radius:4px;padding:0 4px}
+.gcell{display:flex;align-items:center;gap:4px}
+.gcell .gpick{flex:none;width:52px}
+.gsc{width:44px;min-width:0;height:40px;text-align:center;background:#070a12;border:1px solid rgba(255,255,255,.25);border-radius:8px;font-weight:900;font-style:italic;font-size:18px;color:#fff;-moz-appearance:textfield;padding:0 2px}
+.gsc::-webkit-outer-spin-button,.gsc::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.gsc:focus{outline:none;border-color:var(--gold)}
+.gsc.on{border-color:#fff;background:rgba(255,255,255,.1)}
+.gsc::placeholder{font-size:10px;font-style:normal;color:#6b7488}
+.sh-msg{text-align:center;color:#ff9a9a;font-weight:700;font-size:13px;min-height:2px}
+@media (max-width:400px){ .grow{grid-template-columns:26px minmax(0,1fr) 92px 92px;padding:6px} .gcell .gpick{width:46px} .gpick .tile{width:40px;font-size:13px} .gsc{width:40px} }
+.sh-hint{text-align:center;font-size:12px;color:var(--mut);margin-top:2px}
 .team.win{background:linear-gradient(180deg, rgba(50,58,84,.96), rgba(18,22,36,.96));border-color:rgba(255,255,255,.6)}
 .team.lose{opacity:.45}
 
@@ -206,6 +245,7 @@ button.team:active{transform:scale(.98)}
   <div class="ctl">
     <label>SEASON <select id="year"></select></label>
     <label>SERIES <select id="fmt"><option value="7">Best-of-7</option><option value="5">Best-of-5</option></select></label>
+    <button class="btn" id="teams">Edit Teams</button>
     <button class="btn" id="edit">Standings</button>
     <button class="btn" id="dice">🎲 Roll Seeding</button>
     <button class="btn" id="real">Real Seeding</button>
@@ -250,15 +290,42 @@ const need = () => state.fmt==='5' ? 3 : 4;
 const KEYS = ['WR1A','WR1B','WR1C','WR1D','ER1A','ER1B','ER1C','ER1D','WR2A','WR2B','ER2A','ER2B','WCF','ECF','F'];
 const S = (c, n) => cur().seeds[c][n-1];
 /* a pick holds the series score: {s:{TEAM:wins, TEAM:wins}, w:winner once someone reaches 4 (or 3)} */
+/* ---------- home court & game-by-game results ---------- */
+function homeTeam(k){
+  const t = parts(k); if(!t[0] || !t[1]) return null;
+  const d = cur(); if(!d.home) d.home = {};
+  if(t.includes(d.home[k])) return d.home[k];
+  const A = seedOf(t[0]), B = seedOf(t[1]);
+  if(k==='F'){ const pa = pct(recOf(t[0])), pb = pct(recOf(t[1])); if(pa!==pb) return pa>pb ? t[0] : t[1]; }
+  if(A.s!==B.s) return A.s<B.s ? t[0] : t[1];
+  return t[0];
+}
+function pattern(k){ // true = game at the home-court team's floor
+  if(need()===3) return [1,1,0,0,1];
+  if(k==='F' && +state.year>=1985 && +state.year<=2013) return [1,1,0,0,0,1,1]; // 2-3-2 Finals era
+  return [1,1,0,0,1,0,1];
+}
+function hostOf(k, i){ const t = parts(k), h = homeTeam(k); return pattern(k)[i] ? h : t.find(x=>x!==h); }
+function synthGames(k, w, wW, o, oW){
+  const g = [], n = wW + oW; let rw = wW - 1, ow = oW;
+  for(let i=0; i<n-1; i++){ const host = hostOf(k, i); if(host===o && ow>0){ g.push(o); ow--; } else if(host===w && rw>0){ g.push(w); rw--; } else if(ow>0){ g.push(o); ow--; } else { g.push(w); rw--; } }
+  g.push(w); return g;
+}
 function normPick(k){
   const P = cur().picks, p = P[k]; if(!p) return null;
-  if(!p.s){ const t = parts(k); p.s = {}; if(p.w){ p.s[p.w] = need(); const o = t.find(x=>x && x!==p.w); if(o) p.s[o] = Math.min(p.lw||0, need()-1); } delete p.lw; }
-  const ids = Object.keys(p.s);
-  ids.forEach(id=>{ p.s[id] = Math.max(0, Math.min(need(), p.s[id]|0)); });
-  const done = ids.filter(id=>p.s[id]===need());
-  if(done.length>1){ const keep = p.w && done.includes(p.w) ? p.w : done[0]; done.forEach(id=>{ if(id!==keep) p.s[id] = need()-1; }); }
-  p.w = ids.find(id=>p.s[id]===need()) || null;
-  if(!p.w && ids.every(id=>!p.s[id])){ delete P[k]; return null; }
+  const t = parts(k);
+  if(!p.g){ // older saves: rebuild a plausible game order from the series score
+    let s = p.s; if(!s){ s = {}; if(p.w){ s[p.w] = need(); const o = t.find(x=>x && x!==p.w); if(o) s[o] = Math.min(p.lw||0, need()-1); } }
+    const ids = Object.keys(s), w = p.w || ids.find(x=>(s[x]|0)>=need());
+    if(w && t.includes(w)){ const o = t.find(x=>x!==w); p.g = synthGames(k, w, need(), o, Math.min(s[o]|0, need()-1)); }
+    else { p.g = []; ids.forEach(id=>{ for(let i=0; i<Math.min(s[id]|0, need()-1); i++) p.g.push(id); }); }
+    delete p.lw;
+  }
+  // games stay stored in full (so switching Best-of-5 <-> Best-of-7 loses nothing); only the first p.len count
+  const cnt = {}; t.forEach(x=>{ if(x) cnt[x] = 0; }); let n = 0;
+  for(const x of p.g){ if(!(x in cnt)) break; cnt[x]++; n++; if(cnt[x]>=need()) break; }
+  p.len = n; p.s = cnt; p.w = Object.keys(cnt).find(x=>cnt[x]>=need()) || null;
+  if(!n){ delete P[k]; return null; }
   return p;
 }
 const W = k => { const p = normPick(k); return p && p.w ? p.w : null; };
@@ -281,7 +348,7 @@ function resolve(){
   for(const k of KEYS){
     const p = normPick(k); if(!p) continue;
     const t = parts(k);
-    if(!t[0] || !t[1] || Object.keys(p.s).some(id=>!t.includes(id))) delete P[k];
+    if(!t[0] || !t[1] || p.g.slice(0, p.len).some(id=>!t.includes(id))) delete P[k];
   }
 }
 function seedOf(id){ const d = cur(); for(const c of ['W','E']){ const i = d.seeds[c].indexOf(id); if(i>=0) return {c, s:i+1}; } return {c:'', s:0}; }
@@ -303,7 +370,7 @@ function slot(k, id, i, hint){
   const p = normPick(k), T = TEAMS[id], sd = seedOf(id);
   const cls = p && p.w ? (p.w===id ? 'win' : 'lose') : (p ? 'live' : '');
   return `<button class="team ${cls}" data-k="${k}" data-t="${id}" style="--tc:${T.p};--ts:${T.s}" title="${esc(T.c+' '+T.n)}" aria-label="${esc(T.c+' '+T.n)}">
-    <span class="tile">${AB(id)}</span><span class="sd"><b>${sd.s ? ORD(sd.s) : ''}</b>${recOf(id) ? `<i>${esc(recOf(id))}</i>` : ''}</span>${winsCell(k, id, p)}</button>`;
+    <span class="tile">${AB(id)}${homeTeam(k)===id ? '<em class="hm" title="Home court">H</em>' : ''}</span><span class="sd"><b>${sd.s ? ORD(sd.s) : ''}</b>${recOf(id) ? `<i>${esc(recOf(id))}</i>` : ''}</span>${winsCell(k, id, p)}</button>`;
 }
 function matchup(k, hints){ const t = parts(k); hints = hints || []; return `<div class="mu">${slot(k, t[0], 0, hints[0])}${slot(k, t[1], 1, hints[1])}</div>`; }
 function confPanel(c){
@@ -354,33 +421,85 @@ function editorHTML(){
   };
   return col('W') + col('E') + `<div class="eact"><button class="btn on" id="done">Done</button></div>`;
 }
+function teamsEditorHTML(){
+  const d = cur(), y = state.year;
+  const all = c => confTeams(c).filter(id=>TEAMS[id]).slice().sort((x, z)=>TEAMS[x].n.localeCompare(TEAMS[z].n));
+  const opt = (arr, id) => arr.map(t=>`<option value="${t}" ${t===id?'selected':''}>${esc(TEAMS[t].n)}${recOf(t) ? ` (${esc(recOf(t))})` : ''}</option>`).join('');
+  const col = c => `<div class="ecol ${c}"><h3>${c==='W' ? 'WESTERN' : 'EASTERN'} CONFERENCE</h3>
+    <div class="thead2"><span>SEED</span><span></span><span>TEAM IN THE PLAYOFF TREE</span></div>
+    ${d.seeds[c].map((id, i)=>{ const T = TEAMS[id];
+      return `<div class="tr2"><span class="en">${ORD(i+1)}</span><span class="tile" style="--tc:${T.p};--ts:${T.s}">${AB(id)}</span>
+        <select data-seed="${c}${i}" aria-label="${c==='W'?'West':'East'} ${ORD(i+1)} seed"><optgroup label="${c==='W'?'Western':'Eastern'} Conference">${opt(all(c), id)}</optgroup><optgroup label="${c==='W'?'Eastern':'Western'} Conference">${opt(all(c==='W'?'E':'W'), id)}</optgroup></select></div>`; }).join('')}
+  </div>`;
+  return col('W') + col('E') + `<div class="eact"><button class="btn on" id="done">Done</button></div>`;
+}
 function reseed(){ const d = cur(); for(const c of ['W','E']) d.seeds[c] = standings(c).slice(0, 8).map(x=>x.id); }
 const ROUND = k => k==='F' ? 'NBA Finals' : (k.slice(1)==='CF' ? (k[0]==='W' ? 'West Finals' : 'East Finals') : k.includes('R2') ? 'Conference Semifinals' : 'First Round');
 let sheetK = null;
 function sheetHTML(k){
-  const t = parts(k), p = normPick(k), s = p ? p.s : {};
-  const row = id => { const T = TEAMS[id], n = s[id] || 0;
-    return `<div class="srow2 ${p && p.w===id ? 'w' : ''}"><span class="tile" style="--tc:${T.p};--ts:${T.s}">${AB(id)}</span><span class="snm">${esc(T.c)}<br><b>${esc(T.n)}</b></span>
-      <button class="stp" data-step="${id}" data-d="-1" ${n<=0?'disabled':''} aria-label="One less win">−</button><span class="snum">${n}</span><button class="stp" data-step="${id}" data-d="1" ${n>=need()?'disabled':''} aria-label="One more win">+</button></div>`; };
-  const a = s[t[0]] || 0, b = s[t[1]] || 0;
-  const status = p && p.w ? `${TEAMS[p.w].n} win the series ${s[p.w]}-${s[p.w===t[0]?t[1]:t[0]]||0}` : (a===b ? (a ? `Series tied ${a}-${b}` : 'Not started') : `${TEAMS[a>b?t[0]:t[1]].n} lead ${Math.max(a,b)}-${Math.min(a,b)}`);
-  return `<div class="sheet-card" role="dialog" aria-label="Series score"><div class="sh-t">${ROUND(k)}</div><div class="sh-s">First to ${need()} wins advances</div>
-    ${row(t[0])}${row(t[1])}<div class="sh-st">${status}</div>
+  const t = parts(k), p = normPick(k), g = p ? p.g.slice(0, p.len) : [], s = p ? p.s : {}, h = homeTeam(k), aw = t.find(x=>x!==h);
+  const full = need()*2-1, over = p && p.w;
+  const ptsAt = i => Object.assign({}, (p && p.pts && p.pts[i]) || {}, sheetDraft[i] || {});
+  const tileB = (id, gi) => { const T = TEAMS[id], on = g[gi]===id, v = ptsAt(gi)[id];
+    return `<div class="gcell"><button class="gpick ${on ? 'on' : ''}" tabindex="-1" data-game="${gi}" data-t="${id}" style="--tc:${T.p};--ts:${T.s}" aria-pressed="${on}" aria-label="${esc(T.n)} won game ${gi+1}"><span class="tile">${AB(id)}</span>${on ? '<b>W</b>' : ''}</button>
+      <input class="gsc ${on ? 'on' : ''}" data-gs="${gi}" data-t="${id}" type="number" inputmode="numeric" min="0" max="250" placeholder="PTS" value="${v!=null && v!=='' ? esc(v) : ''}" aria-label="${esc(T.n)} points, game ${gi+1}"></div>`; };
+  let rows = '';
+  for(let i=0; i<full; i++){
+    if(i>g.length || (over && i>=g.length)) break;
+    const host = hostOf(k, i), vis = t.find(x=>x!==host);
+    rows += `<div class="grow ${g[i] ? 'done' : 'next'}"><span class="gno">G${i+1}</span><span class="gat">@ ${AB(host)}<i>${esc(TEAMS[vis].n)} at ${esc(TEAMS[host].n)}</i></span>${tileB(t[0], i)}${tileB(t[1], i)}</div>`;
+  }
+  const a0 = s[t[0]] || 0, b0 = s[t[1]] || 0;
+  const status = over ? `${TEAMS[p.w].n} win the series ${s[p.w]}-${s[p.w===t[0]?t[1]:t[0]]||0}` : (a0===b0 ? (a0 ? `Series tied ${a0}-${b0}` : 'Not started') : `${TEAMS[a0>b0?t[0]:t[1]].n} lead ${Math.max(a0,b0)}-${Math.min(a0,b0)}`);
+  const pat = pattern(k).map(x=>x ? 'H' : 'A').join('');
+  const fmtName = need()===3 ? '2-2-1' : (pat==='HHAAAHH' ? '2-3-2' : '2-2-1-1-1');
+  return `<div class="sheet-card" role="dialog" aria-label="Series games"><div class="sh-t">${ROUND(k)}</div>
+    <div class="sh-s">First to ${need()} wins · ${fmtName} format</div>
+    <div class="hc"><span class="tile" style="--tc:${TEAMS[h].p};--ts:${TEAMS[h].s}">${AB(h)}</span><span><b>Home court: ${esc(TEAMS[h].n)}</b><br>Games ${pattern(k).map((x,i)=>x ? i+1 : 0).filter(Boolean).join(', ')} at home</span><button class="btn" data-home="${aw}">Swap</button></div>
+    <div class="sc2"><span>${AB(t[0])} <b>${a0}</b></span><i>–</i><span><b>${b0}</b> ${AB(t[1])}</span></div>
+    <div class="glist">${rows}</div>
+    <div class="sh-st">${status}</div>
+    <div class="sh-msg" id="sh-msg"></div>
+    <div class="sh-hint">Type both teams' points for each game — the higher score wins. Or just tap the winning team. Tap a winner again to undo that game.</div>
     <div class="sh-b"><button class="btn" data-sheet="clear">Clear</button><button class="btn on" data-sheet="done">Done</button></div></div>`;
 }
-function openSheet(k){ const t = parts(k); if(!t[0] || !t[1]) return; sheetK = k; const el = document.getElementById('sheet'); el.innerHTML = sheetHTML(k); el.hidden = false; }
+let sheetDraft = {};
+function openSheet(k){ const t = parts(k); if(!t[0] || !t[1]) return; sheetK = k; sheetDraft = {}; const el = document.getElementById('sheet'); el.innerHTML = sheetHTML(k); el.hidden = false; }
 function closeSheet(){ sheetK = null; const el = document.getElementById('sheet'); el.hidden = true; el.innerHTML = ''; render(); }
-function stepScore(id, dlt){
-  const P = cur().picks, k = sheetK, t = parts(k);
-  let p = normPick(k); if(!p) p = P[k] = {s:{}};
-  t.forEach(x=>{ if(p.s[x]==null) p.s[x] = 0; });
-  const o = t.find(x=>x!==id);
-  p.s[id] = Math.max(0, Math.min(need(), p.s[id] + dlt));
-  if(p.s[id]===need() && p.s[o]===need()) p.s[o] = need()-1;
-  p.w = p.s[id]===need() ? id : (p.s[o]===need() ? o : null);
-  if(!p.w && !p.s[id] && !p.s[o]) delete P[k];
-  resolve(); save();
+function setGame(i, id){
+  const P = cur().picks, k = sheetK; let p = normPick(k);
+  const eff = p ? p.g.slice(0, p.len) : [];
+  if(!p) p = P[k] = {g:[]};
+  const keepPts = (p.pts || []).slice(0, Math.min(i, eff.length));
+  if(eff[i]===id){ p.g = eff.slice(0, i); }                  // undo this game and the ones after it
+  else { p.g = eff.slice(0, Math.min(i, eff.length)).concat(id); }
+  p.pts = keepPts; Object.keys(sheetDraft).forEach(j=>{ if(+j>=i) delete sheetDraft[j]; });
+  if(!p.g.length) delete P[k];
+  normPick(k); resolve(); save();
   document.getElementById('sheet').innerHTML = sheetHTML(k);
+}
+function scoreGame(i){
+  const k = sheetK, t = parts(k), P = cur().picks; let p = normPick(k);
+  const v = Object.assign({}, (p && p.pts && p.pts[i]) || {}, sheetDraft[i] || {});
+  const a = v[t[0]], b = v[t[1]], msg = document.getElementById('sh-msg');
+  if(a==='' || b==='' || a==null || b==null || isNaN(+a) || isNaN(+b)) return; // wait for both scores
+  if(+a === +b){ if(msg) msg.textContent = 'No ties in basketball — if it went to overtime, enter the final score.'; return; }
+  const win = +a > +b ? t[0] : t[1];
+  const eff = p ? p.g.slice(0, p.len) : [];
+  if(!p) p = P[k] = {g:[]};
+  const pts = (p.pts || []).slice(0, Math.min(i, eff.length));
+  p.g = eff.slice(0, Math.min(i, eff.length)).concat(win);
+  pts[Math.min(i, eff.length)] = {[t[0]]: Math.round(+a), [t[1]]: Math.round(+b)};
+  p.pts = pts; delete sheetDraft[i];
+  normPick(k); resolve(); save();
+  document.getElementById('sheet').innerHTML = sheetHTML(k);
+  const nx = document.querySelector(`.gsc[data-gs="${i+1}"]`); if(nx && !(normPick(k) || {}).w) nx.focus({preventScroll:false});
+}
+function swapHome(id){
+  const d = cur(), k = sheetK; if(!d.home) d.home = {}; d.home[k] = id;
+  const p = normPick(k); // keep the series score, re-lay the games on the new schedule
+  if(p && p.len && !(p.pts || []).some(Boolean)){ const t = parts(k), w = p.w; if(w){ const o = t.find(x=>x!==w); p.g = synthGames(k, w, p.s[w], o, p.s[o]); } }
+  save(); document.getElementById('sheet').innerHTML = sheetHTML(k);
 }
 function rollSeeding(){
   const d = cur(), y = state.year, G = {1999:50, 2012:66}[y] || 82;
@@ -423,7 +542,7 @@ function newspaperHTML(){
   const roadLine = path.filter(x=>x.k!=='F').map(x=>`${x.l===0 ? 'swept' : 'beat'} the ${TEAMS[x.opp].n} ${x.w}-${x.l}`);
   const roadTxt = roadLine.length ? roadLine.slice(0,-1).join(', ') + (roadLine.length>1 ? ' and ' : '') + roadLine[roadLine.length-1] : '';
   const P = [];
-  P.push(`<span class="dropcap">${esc(T.c.toUpperCase())}</span> — The ${esc(T.c)} ${esc(nick)} are the ${y} NBA champions. They finished off the ${esc(O.c)} ${esc(O.n)} ${fw}-${fl} in the Finals${gamesF===full ? `, surviving a winner-take-all Game ${full}` : fl===0 ? ' without dropping a single game' : `, closing out the series in Game ${gamesF}`}, and completed a ${totW}-${totL} run through the playoffs as the No. ${sd.s} seed in the ${conf}.`);
+  P.push(`<span class="dropcap">${esc(T.c.toUpperCase())}</span> — The ${esc(T.c)} ${esc(nick)} are the ${y} NBA champions. They finished off the ${esc(O.c)} ${esc(O.n)} ${fw}-${fl} in the Finals${gamesF===full ? `, surviving a winner-take-all Game ${full}` : fl===0 ? ' without dropping a single game' : `, closing out the series in Game ${gamesF} ${hostOf('F', gamesF-1)===id ? 'on their home floor' : 'on the road'}`}${p.pts && p.pts[gamesF-1] ? ((fl===0 || gamesF===full) ? `, sealing it with a ${Math.max(...Object.values(p.pts[gamesF-1]))}-${Math.min(...Object.values(p.pts[gamesF-1]))} win in Game ${gamesF}` : ` with a ${Math.max(...Object.values(p.pts[gamesF-1]))}-${Math.min(...Object.values(p.pts[gamesF-1]))} win`) : ''}, and completed a ${totW}-${totL} run through the playoffs as the No. ${sd.s} seed in the ${conf}.`);
   P.push(`${rec ? `It began with a ${esc(rec)} regular season${sd.s===1 ? `, good for the top seed in the ${conf}` : sd.s<=4 ? `, enough to secure home court in the first round` : `, and few outside the locker room gave them much of a chance`}. ` : ''}${pk([`From the opening tip of the playoffs, this group played like it had something to prove.`, `What followed was a spring that ${esc(T.c)} will not soon forget.`, `Nobody in the league wanted to see them in a seven-game series, and it showed.`])}`);
   if(roadTxt) P.push(`On the road to the Finals, the ${esc(nick)} ${roadTxt}. ${longest && longest.l>=need()-1 && longest.k!=='F' ? `The toughest test came in the ${ROUND_LONG(longest.k)} against the ${esc(TEAMS[longest.opp].n)}, a series that went the full ${longest.w+longest.l} games and tested every bit of their resolve.` : sweeps ? `They ${sweeps>1 ? `swept ${NUMW[sweeps]} series` : 'pulled off a sweep'} along the way, a sign of just how dominant they were.` : `Each round brought a new challenge, and each time they found an answer.`}${upsets.length ? ` Along the way they knocked off the higher-seeded ${upsets.map(x=>esc(TEAMS[x.opp].n)).join(' and ')}.` : ''}`);
   P.push(`In the Finals they met the ${esc(O.n)}, the No. ${so.s} seed from the ${oconf}${orec ? ` (${esc(orec)})` : ''}${oppPath.length ? `, who had reached this stage by getting past the ${oppPath.map(x=>esc(TEAMS[x.opp].n)).join(', the ').replace(/, the ([^,]*)$/, ' and the $1')}` : ''}. ${fl===0 ? pk([`It was never close. The ${esc(nick)} controlled every game from start to finish.`, `The ${esc(O.n)} never found an answer, and the sweep was complete in four.`]) : gamesF===full ? pk([`It came down to one game for everything, and the ${esc(nick)} delivered when it mattered most.`, `Both teams traded blows for ${full} games before the ${esc(nick)} finally pulled away.`]) : pk([`The ${esc(O.n)} pushed back and won ${NUMW[fl]} game${fl>1?'s':''}, but the ${esc(nick)} always had a response.`, `The ${esc(O.n)} made it a fight, but the ${esc(nick)} were simply too much over the long haul.`])}`);
@@ -483,12 +602,17 @@ function render(keepEditor){
   if(!sel.options.length) sel.innerHTML = YEARS.map(v=>`<option value="${v}">${v}</option>`).join('');
   sel.value = y;
   document.getElementById('fmt').value = state.fmt;
-  document.getElementById('edit').textContent = state.edit ? 'Close Standings' : 'Standings';
-  document.getElementById('edit').classList.toggle('on', !!state.edit);
-  document.getElementById('hint').textContent = state.edit
+  if(state.edit===true) state.edit = 'stand';
+  document.getElementById('edit').textContent = state.edit==='stand' ? 'Close Standings' : 'Standings';
+  document.getElementById('edit').classList.toggle('on', state.edit==='stand');
+  document.getElementById('teams').textContent = state.edit==='teams' ? 'Close Edit Teams' : 'Edit Teams';
+  document.getElementById('teams').classList.toggle('on', state.edit==='teams');
+  document.getElementById('hint').textContent = state.edit==='stand'
     ? 'Type each team’s wins and losses. The table re-ranks itself, and the top 8 in each conference go into the bracket.'
-    : 'Tap a team to send it to the next round, or tap a score box to set the series score (e.g. 4-2).';
-  const ed = document.getElementById('editor'); ed.hidden = !state.edit; if(!keepEditor) ed.innerHTML = state.edit ? editorHTML() : '';
+    : state.edit==='teams'
+    ? 'Choose the team for every seed. Picking a team that is already in the tree swaps the two. (Changing a record in Standings re-seeds by record.)'
+    : 'Tap a team to send it to the next round, or tap a score box to play the series game by game (home & away). H = home court.';
+  const ed = document.getElementById('editor'); ed.hidden = !state.edit; if(!keepEditor) ed.innerHTML = state.edit==='stand' ? editorHTML() : state.edit==='teams' ? teamsEditorHTML() : '';
   document.getElementById('bwrap').innerHTML = confPanel('W') + finalsPanel() + confPanel('E');
   applyFit(); save();
 }
@@ -500,8 +624,10 @@ document.addEventListener('click', e=>{
   if(pb){ pb.dataset.paper==='open' ? openPaper() : closePaper(); return; }
   if(e.target.id==='paper'){ closePaper(); return; }
   if(e.target.closest('.trophy.on') && !e.target.closest('button')){ openPaper(); return; }
-  const stp = e.target.closest('[data-step]');
-  if(stp){ stepScore(stp.dataset.step, +stp.dataset.d); return; }
+  const gp = e.target.closest('[data-game]');
+  if(gp){ setGame(+gp.dataset.game, gp.dataset.t); return; }
+  const hb = e.target.closest('[data-home]');
+  if(hb){ swapHome(hb.dataset.home); return; }
   const shb = e.target.closest('[data-sheet]');
   if(shb){ if(shb.dataset.sheet==='clear') delete cur().picks[sheetK]; resolve(); closeSheet(); return; }
   if(e.target.id==='sheet'){ closeSheet(); return; }
@@ -513,11 +639,18 @@ document.addEventListener('click', e=>{
     if(!pr[0] || !pr[1]) return;
     const cp = normPick(k);
     if(cp && cp.w===id) delete P[k];
-    else { const o = pr.find(x=>x!==id), prev = cp ? cp.s : {}; P[k] = {s:{[id]:need(), [o]:Math.min(prev[o]||0, need()-1)}, w:id}; }
+    else { const o = pr.find(x=>x!==id), prev = cp ? cp.s : {}; P[k] = {g: synthGames(k, id, need(), o, Math.min(prev[o]||0, need()-1))}; }
     render(); return;
   }
 });
+document.addEventListener('input', e=>{
+  const gs = e.target.closest('input[data-gs]');
+  if(gs){ const i = +gs.dataset.gs; (sheetDraft[i] = sheetDraft[i] || {})[gs.dataset.t] = gs.value; const m = document.getElementById('sh-msg'); if(m) m.textContent = ''; }
+});
+document.addEventListener('keydown', e=>{ const gs = e.target.closest && e.target.closest('input[data-gs]'); if(gs && e.key==='Enter'){ gs.blur(); } });
 document.addEventListener('change', e=>{
+  const gs = e.target.closest('input[data-gs]');
+  if(gs){ scoreGame(+gs.dataset.gs); return; }
   const ri = e.target.closest('input[data-rec]');
   if(ri){
     const d = cur(), id = ri.dataset.rec, row = ri.closest('.er');
@@ -541,7 +674,8 @@ document.getElementById('year').onchange = e => { state.year = e.target.value; r
 document.getElementById('fmt').onchange = e => { state.fmt = e.target.value; render(); };
 document.getElementById('dice').onclick = rollSeeding;
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ if(sheetK) closeSheet(); if(!document.getElementById('paper').hidden) closePaper(); } });
-document.getElementById('edit').onclick = () => { state.edit = !state.edit; render(); };
+document.getElementById('edit').onclick = () => { state.edit = state.edit==='stand' ? false : 'stand'; render(); };
+document.getElementById('teams').onclick = () => { state.edit = state.edit==='teams' ? false : 'teams'; render(); };
 document.getElementById('real').onclick = () => { const d = cur(); d.seeds = {W:HIST[state.year].W.slice(0,8), E:HIST[state.year].E.slice(0,8)}; d.picks = {}; d.rec = {}; render(); };
 document.getElementById('clear').onclick = () => { cur().picks = {}; render(); };
 document.getElementById('fit').onclick = () => { state.fit = !state.fit; render(); };
